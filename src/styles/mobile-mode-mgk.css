@@ -1471,3 +1471,40 @@ body.mgk-sheet-only #canvas { display: none !important; }
   background: rgba(0, 0, 0, 0.15) !important;
   color: var(--mgk-bone) !important;
 }
+
+/* --------------------------------------------------------------------------
+   Token HUD Controls (Rotation & Flip)
+   -------------------------------------------------------------------------- */
+
+.mgk-hud-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.mgk-hud-btn {
+  width: 38px;
+  height: 38px;
+  background: var(--mgk-slate-hi);
+  border: 1px solid var(--mgk-edge);
+  color: var(--mgk-bone);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  cursor: pointer;
+  clip-path: var(--mgk-chamfer-sm);
+  box-shadow: var(--mgk-shadow);
+  transition: border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.mgk-hud-btn:active {
+  background: var(--mgk-ink-hi);
+  transform: scale(0.92);
+}
+
+.mgk-hud-btn.active {
+  border-color: var(--mgk-brass);
+  color: var(--mgk-brass);
+}

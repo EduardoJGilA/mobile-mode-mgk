@@ -13,6 +13,7 @@ import { ChatStack } from './ui/chat-stack.js';
 import { MacroHotbar } from './ui/macro-hotbar.js';
 import { SheetManager } from './sheets/sheet-manager.js';
 import { SheetInterceptor } from './sheets/sheet-interceptor.js';
+import { TokenHudControls } from './touch/token-hud-controls.js';
 import { TemplatePlacer } from './touch/template-placer.js';
 import { SheetOnly } from './standalone/sheet-only.js';
 import { CanvasFreeze } from './performance/canvas-freeze.js';
@@ -66,6 +67,7 @@ Hooks.once("ready", () => {
   SheetManager.init();
   SheetInterceptor.init();
   WindowScaler.init();
+  TokenHudControls.init();
 
   // Sheet-only mode runs without a canvas, so the canvas features stay off.
   SheetOnly.init();
