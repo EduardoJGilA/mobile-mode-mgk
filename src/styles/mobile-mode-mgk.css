@@ -1476,27 +1476,39 @@ body.mgk-sheet-only #canvas { display: none !important; }
    Token HUD Directional Controls (TouchVTT style 8-arrow ring)
    -------------------------------------------------------------------------- */
 
+#token-hud,
+.token-hud,
+#token-hud .col,
+#token-hud .col.left,
+#token-hud .col.right {
+  overflow: visible !important;
+}
+
 #token-hud .mgk-hud-dir-ring {
+  position: absolute;
+  inset: 0;
   pointer-events: none;
+  overflow: visible !important;
+  z-index: 100 !important;
 }
 
 .mgk-hud-dir-btn {
   position: absolute;
   width: 36px;
   height: 36px;
-  background: rgba(30, 34, 42, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(30, 34, 42, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
   border-radius: 6px;
-  color: #f0f0f0;
-  display: flex;
+  color: #f0f0f0 !important;
+  display: flex !important;
   align-items: center;
   justify-content: center;
   font-size: 1.1rem;
   cursor: pointer;
-  pointer-events: auto;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  pointer-events: auto !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6) !important;
   transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
-  z-index: 10;
+  z-index: 200 !important;
 }
 
 .mgk-dir-sym {
@@ -1506,26 +1518,26 @@ body.mgk-sheet-only #canvas { display: none !important; }
 }
 
 .mgk-hud-dir-btn:active {
-  background: rgba(0, 0, 0, 0.95);
+  background: rgba(0, 0, 0, 0.95) !important;
   transform: scale(0.92);
 }
 
 .mgk-hud-dir-btn.active {
-  border-color: #ffc107;
-  color: #ffc107;
-  background: rgba(40, 35, 20, 0.95);
+  border-color: #ffc107 !important;
+  color: #ffc107 !important;
+  background: rgba(40, 35, 20, 0.95) !important;
 }
 
 /* Position ring around token HUD */
-.mgk-dir-n  { top: -45px; left: 50%; transform: translateX(-50%); }
-.mgk-dir-s  { bottom: -45px; left: 50%; transform: translateX(-50%); }
-.mgk-dir-w  { left: -45px; top: 50%; transform: translateY(-50%); }
-.mgk-dir-e  { right: -45px; top: 50%; transform: translateY(-50%); }
+.mgk-dir-n  { top: -45px !important; left: 50% !important; transform: translateX(-50%) !important; }
+.mgk-dir-s  { bottom: -45px !important; left: 50% !important; transform: translateX(-50%) !important; }
+.mgk-dir-w  { left: -45px !important; top: 50% !important; transform: translateY(-50%) !important; }
+.mgk-dir-e  { right: -45px !important; top: 50% !important; transform: translateY(-50%) !important; }
 
-.mgk-dir-nw { top: -45px; left: -45px; }
-.mgk-dir-ne { top: -45px; right: -45px; }
-.mgk-dir-sw { bottom: -45px; left: -45px; }
-.mgk-dir-se { bottom: -45px; right: -45px; }
+.mgk-dir-nw { top: -45px !important; left: -45px !important; }
+.mgk-dir-ne { top: -45px !important; right: -45px !important; }
+.mgk-dir-sw { bottom: -45px !important; left: -45px !important; }
+.mgk-dir-se { bottom: -45px !important; right: -45px !important; }
 
 /* --------------------------------------------------------------------------
    Ruler Touch HUD (TouchVTT style vertical floating stack)
