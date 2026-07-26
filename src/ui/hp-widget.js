@@ -2,7 +2,8 @@ import { esc, t } from '../core/utils.js';
 
 /**
  * Touch HP editor: -/+ stepper, healing/damage application, temp HP and temp max.
- * Mirrors the HP popover in the Swipe-VTT demo.
+ * Damage is absorbed by temporary hit points first, which is what every
+ * supported system expects.
  */
 export class HpWidget {
   static current = null;

@@ -38,9 +38,11 @@ export class TemplatePlacer {
     this.renderToolbar();
     this.bindCanvas();
     ui.notifications?.info(t("Templates.TapToPlace", "Tap the map to place the template."));
+    Hooks.callAll("mobileModeTemplatePlacer", true);
   }
 
   static cancel() {
+    const wasActive = this.active;
     this.active = false;
     document.body.classList.remove("mgk-placing-template");
     Hooks.callAll("mobileModeSuspendGestures", false);
@@ -50,6 +52,10 @@ export class TemplatePlacer {
     this.toolbar = null;
     this.unbindCanvas();
     this.origin = null;
+
+    // Placing a template closes the tool by itself, so the button that opened
+    // it has to be told; otherwise it stays lit and the next tap re-opens it.
+    if (wasActive) Hooks.callAll("mobileModeTemplatePlacer", false);
   }
 
   /* -------------------------------------------- */

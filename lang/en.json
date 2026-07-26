@@ -52,7 +52,9 @@
       "Unread": "Unread",
       "Empty": "No messages yet.",
       "Older": "Older",
-      "Newer": "Newer"
+      "Newer": "Newer",
+      "Jump": "Jump to a message",
+      "Latest": "Latest"
     },
     "Templates": {
       "TapToPlace": "Tap the map to place the template.",

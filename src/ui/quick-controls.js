@@ -54,11 +54,17 @@ export class QuickControls {
     on("mgk-btn-settings", () => game.settings.sheet.render(true));
     on("mgk-btn-ruler", () => this.toggleTool(container.querySelector("#mgk-btn-ruler"), "ruler"));
     on("mgk-btn-template", () => {
-      const button = container.querySelector("#mgk-btn-template");
+      // Leaving the ruler on is what used to strand the player, so drop it.
+      if (this.activeTool) this.releaseTool();
       TemplatePlacer.toggle();
-      button.classList.toggle("active", TemplatePlacer.active);
       stack.classList.remove("open");
       toolsBtn.querySelector("i").className = "fas fa-chevron-up";
+    });
+
+    // The placer closes itself after placing, so mirror its real state rather
+    // than assuming the button and the tool stay in step.
+    Hooks.on("mobileModeTemplatePlacer", (open) => {
+      container.querySelector("#mgk-btn-template")?.classList.toggle("active", !!open);
     });
     on("mgk-btn-clear-targets", () => {
       game.user.updateTokenTargets([]);
@@ -99,6 +105,9 @@ export class QuickControls {
    */
   static toggleTool(button, tool) {
     if (this.activeTool === tool) return this.releaseTool();
+
+    // Only one map tool at a time, or they fight over single-finger input.
+    TemplatePlacer.cancel();
 
     if (this.activateTool(["tokens", "token"], tool)) {
       this.activeTool = tool;

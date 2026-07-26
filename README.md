@@ -1,8 +1,6 @@
 # Mobile Mode MGK
 
-Mobile-friendly interface module for [Foundry VTT](https://foundryvtt.com/) with touch controls, drawer character sheets, a live chat drawer, and performance tools for phones and tablets.
-
-Inspired by [`swipe-vtt`](https://github.com/crlngn/swipe-vtt) by Carolingian.
+A mobile interface for [Foundry VTT](https://foundryvtt.com/): touch gestures on the canvas, a drawer character sheet, a floating chat card, and performance tools for phones and tablets.
 
 ## Features
 

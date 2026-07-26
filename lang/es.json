@@ -52,7 +52,9 @@
       "Unread": "Sin leer",
       "Empty": "Aún no hay mensajes.",
       "Older": "Anterior",
-      "Newer": "Siguiente"
+      "Newer": "Siguiente",
+      "Jump": "Ir a un mensaje",
+      "Latest": "Último"
     },
     "Templates": {
       "TapToPlace": "Toca el mapa para colocar la plantilla.",

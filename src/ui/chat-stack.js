@@ -3,11 +3,11 @@ import { esc, t } from '../core/utils.js';
 const HISTORY = 40;
 
 /**
- * The bottom card stack from the Swipe-VTT demo.
+ * A single chat message floating over the map.
  *
- * The newest chat message floats over the canvas as a card. Chevrons page
- * backwards and forwards through recent history and the counter shows the
- * position, so a roll result stays reachable without opening the full drawer.
+ * The newest message takes the card. Chevrons page through recent history, and
+ * tapping the counter opens a scrubber for jumping straight to an older entry,
+ * so a roll result stays reachable without opening the full drawer.
  */
 export class ChatStack {
   static el = null;
@@ -50,25 +50,11 @@ export class ChatStack {
     this.renderCard();
     this.el.classList.add("open");
     document.body.classList.add("mgk-stack-open");
-    this.updateHeightVar();
   }
 
   static hide() {
     this.el?.classList.remove("open");
     document.body.classList.remove("mgk-stack-open");
-    document.documentElement.style.setProperty("--mgk-stack-height", "0px");
-  }
-
-  /**
-   * Publish the card's real height so the floating controls can sit above it.
-   * The card is centred at the bottom and used to cover the dice and chat
-   * buttons, making it impossible to roll while a message was on screen.
-   */
-  static updateHeightVar() {
-    requestAnimationFrame(() => {
-      const height = this.el?.offsetHeight ?? 0;
-      document.documentElement.style.setProperty("--mgk-stack-height", `${height}px`);
-    });
   }
 
   static toggle() {
@@ -85,11 +71,19 @@ export class ChatStack {
     el.innerHTML = `
       <div class="mgk-drawer-grab"></div>
       <div class="mgk-stack-card" id="mgk-stack-card"></div>
-      <div class="mgk-stack-pager">
+      <div class="mgk-stack-pager" id="mgk-stack-pager">
         <button type="button" data-step="-1" aria-label="${esc(t("Chat.Older", "Older"))}"><i class="fas fa-chevron-up"></i></button>
-        <span id="mgk-stack-count">1 / 1</span>
+        <button type="button" id="mgk-stack-count" class="mgk-stack-count"
+                aria-label="${esc(t("Chat.Jump", "Jump to a message"))}">1 / 1</button>
         <button type="button" data-step="1" aria-label="${esc(t("Chat.Newer", "Newer"))}"><i class="fas fa-chevron-down"></i></button>
         <button type="button" data-close="1" aria-label="${esc(t("Sheets.Close", "Close"))}"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="mgk-stack-scrub" id="mgk-stack-scrub" hidden>
+        <input type="range" id="mgk-stack-range" min="1" max="1" step="1" value="1"
+               aria-label="${esc(t("Chat.Jump", "Jump to a message"))}">
+        <span id="mgk-stack-scrub-label">1 / 1</span>
+        <button type="button" id="mgk-stack-latest">${esc(t("Chat.Latest", "Latest"))}</button>
+        <button type="button" id="mgk-stack-scrub-done" aria-label="${esc(t("Sheets.Close", "Close"))}"><i class="fas fa-check"></i></button>
       </div>
     `;
 
@@ -99,6 +93,21 @@ export class ChatStack {
       btn.addEventListener("click", () => this.step(Number(btn.dataset.step)));
     });
     el.querySelector("[data-close]").addEventListener("click", () => this.hide());
+
+    // Tapping the counter turns it into a scrubber, which beats tapping an
+    // arrow eighty times to reach an old roll.
+    el.querySelector("#mgk-stack-count").addEventListener("click", () => this.toggleScrub(true));
+    el.querySelector("#mgk-stack-scrub-done").addEventListener("click", () => this.toggleScrub(false));
+    el.querySelector("#mgk-stack-latest").addEventListener("click", () => {
+      this.jumpToLatest();
+      this.toggleScrub(false);
+    });
+
+    const range = el.querySelector("#mgk-stack-range");
+    range.addEventListener("input", () => {
+      this.index = Number(range.value) - 1;
+      this.renderCard();
+    });
 
     // Swipe is bound to the grab handle only. Binding it to the whole panel
     // meant scrolling a long message paged the stack instead, which walked the
@@ -129,6 +138,24 @@ export class ChatStack {
     this.renderCard();
   }
 
+  static toggleScrub(open) {
+    const pager = this.el?.querySelector("#mgk-stack-pager");
+    const scrub = this.el?.querySelector("#mgk-stack-scrub");
+    if (!pager || !scrub) return;
+    pager.hidden = open;
+    scrub.hidden = !open;
+    if (open) this.syncScrub();
+  }
+
+  static syncScrub() {
+    const range = this.el?.querySelector("#mgk-stack-range");
+    const label = this.el?.querySelector("#mgk-stack-scrub-label");
+    if (!range) return;
+    range.max = String(Math.max(1, this.messages.length));
+    range.value = String(this.index + 1);
+    if (label) label.textContent = `${this.index + 1} / ${this.messages.length}`;
+  }
+
   static _renderToken = 0;
 
   static async renderCard() {
@@ -137,6 +164,7 @@ export class ChatStack {
 
     const message = this.messages[this.index];
     this.el.querySelector("#mgk-stack-count").textContent = `${this.index + 1} / ${this.messages.length}`;
+    this.syncScrub();
 
     // Disabled arrows make the ends of the history obvious.
     const older = this.el.querySelector('[data-step="-1"]');

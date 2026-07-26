@@ -1,29 +1,70 @@
-/* Mobile Mode MGK Design System */
+/* ==========================================================================
+   Mobile Mode MGK — "Brass & Ink"
+
+   Built for a player holding a phone at a lamplit table, mid-combat.
+
+   Three deliberate choices carry the identity:
+
+   1. Chamfered facets, never rounded corners. Every stat, roll target and
+      condition is a tile with two corners cut and a single lit top edge, so it
+      reads as a die face catching one light source. This is the signature and
+      the only bold move; everything around it stays quiet.
+   2. Dice notation is set in a monospace face with tabular figures. Modifiers
+      and damage formulas are notation, so they are typeset as notation, and
+      +5 stops jittering against +12 down a column.
+   3. Aged brass on green-black ink. Warm metal under lamplight rather than
+      screen-blue, and dark enough not to light up the table at night.
+   ========================================================================== */
 
 :root {
-  --mgk-bg-dark: #12151e;
-  --mgk-bg-card: rgba(22, 27, 38, 0.85);
-  --mgk-bg-glass: rgba(20, 24, 35, 0.75);
-  --mgk-border-glass: rgba(255, 255, 255, 0.1);
-  --mgk-accent-purple: #8b5cf6;
-  --mgk-accent-blue: #3b82f6;
-  --mgk-accent-gradient: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
-  --mgk-text-main: #f3f4f6;
-  --mgk-text-muted: #9ca3af;
-  --mgk-hp-green: #10b981;
-  --mgk-hp-red: #ef4444;
-  --mgk-shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
-  --mgk-radius-md: 10px;
-  --mgk-radius-lg: 18px;
-  --mgk-transition: all 0.2s ease;
+  /* Surface: green-black ink, like a dark table rather than pure black. */
+  --mgk-ink: #0f1411;
+  --mgk-slate: #18201c;
+  --mgk-slate-hi: #212b26;
+  --mgk-edge: #33443c;
+  --mgk-edge-soft: rgba(232, 237, 232, 0.08);
+
+  /* Accents: candlelight on metal, patina, oxide. */
+  --mgk-brass: #c8a344;
+  --mgk-brass-dim: #8a6f26;
+  --mgk-patina: #5aa98d;
+  --mgk-oxide: #c15a3e;
+
+  --mgk-bone: #e8ede8;
+  --mgk-ash: #93a39a;
+
+  --mgk-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.75);
+
+  /* The cut corner. One value drives the whole shape language. */
+  --mgk-cut: 9px;
+  --mgk-cut-sm: 6px;
+  --mgk-chamfer: polygon(
+    var(--mgk-cut) 0, 100% 0,
+    100% calc(100% - var(--mgk-cut)), calc(100% - var(--mgk-cut)) 100%,
+    0 100%, 0 var(--mgk-cut)
+  );
+  --mgk-chamfer-sm: polygon(
+    var(--mgk-cut-sm) 0, 100% 0,
+    100% calc(100% - var(--mgk-cut-sm)), calc(100% - var(--mgk-cut-sm)) 100%,
+    0 100%, 0 var(--mgk-cut-sm)
+  );
+
+  --mgk-font-ui: 'Signika', -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mgk-font-data: ui-monospace, 'SF Mono', 'Roboto Mono', 'DejaVu Sans Mono', monospace;
+
+  --mgk-ease: cubic-bezier(0.2, 0.9, 0.3, 1);
+
   --mgk-safe-bottom: env(safe-area-inset-bottom, 0px);
   --mgk-safe-top: env(safe-area-inset-top, 0px);
   --mgk-safe-left: env(safe-area-inset-left, 0px);
   --mgk-safe-right: env(safe-area-inset-right, 0px);
+
+  /* Height of the floating control column, used to keep overlays clear of it. */
+  --mgk-controls-clear: calc(24px + var(--mgk-safe-bottom) + 48px + 14px);
 }
 
 body.mobile-mode-mgk {
-  font-family: 'Signika', -apple-system, Roboto, sans-serif;
+  font-family: var(--mgk-font-ui);
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
@@ -33,15 +74,65 @@ body.mobile-mode-mgk {
   padding: 0;
 }
 
-/* iOS Safari collapses 100vh under the toolbars; dvh tracks the visible area. */
 body.mobile-mode-mgk.mgk-ios #interface,
 body.mobile-mode-mgk.mgk-ios #board {
   height: 100dvh;
 }
 
-/* -------------------------------------------- */
-/*  Hide the desktop Foundry chrome             */
-/* -------------------------------------------- */
+/* Keyboard focus stays visible everywhere. */
+body.mobile-mode-mgk :focus-visible {
+  outline: 2px solid var(--mgk-brass);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.mobile-mode-mgk *,
+  body.mobile-mode-mgk *::before,
+  body.mobile-mode-mgk *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Facet — the signature. Two corners cut, one lit edge.
+   -------------------------------------------------------------------------- */
+
+.mgk-stat-box,
+.mgk-ability-card,
+.mgk-action-btn,
+.mgk-section,
+.mgk-row,
+.mgk-status,
+.mgk-big-btn,
+.mgk-currency,
+.mgk-macro-slot,
+.mgk-hp-widget,
+.mgk-template-toolbar,
+.mgk-chat-stack,
+.mgk-template-shape,
+.mgk-chip {
+  clip-path: var(--mgk-chamfer);
+  border-radius: 0;
+}
+
+.mgk-stat-box,
+.mgk-ability-card,
+.mgk-action-btn,
+.mgk-section,
+.mgk-status,
+.mgk-big-btn,
+.mgk-currency,
+.mgk-macro-slot {
+  background: linear-gradient(158deg, var(--mgk-slate-hi), var(--mgk-slate));
+  /* clip-path also clips the shadow, so the highlight follows the cut. */
+  box-shadow: inset 0 1px 0 var(--mgk-edge-soft);
+  border: none;
+}
+
+/* --------------------------------------------------------------------------
+   Hide the desktop Foundry chrome
+   -------------------------------------------------------------------------- */
 
 body.mobile-mode-mgk.mgk-hide-native #players,
 body.mobile-mode-mgk.mgk-hide-native #hotbar,
@@ -56,7 +147,6 @@ body.mobile-mode-mgk.mgk-hide-native #ui-left > *:not(#mgk-left-controls) {
   display: none !important;
 }
 
-/* Keep the layout containers alive so Foundry's own code keeps working. */
 body.mobile-mode-mgk.mgk-hide-native #ui-left,
 body.mobile-mode-mgk.mgk-hide-native #ui-top,
 body.mobile-mode-mgk.mgk-hide-native #ui-bottom {
@@ -65,7 +155,6 @@ body.mobile-mode-mgk.mgk-hide-native #ui-bottom {
   padding: 0;
 }
 
-/* Notifications stay, but out of the thumb zone. */
 body.mobile-mode-mgk #notifications {
   top: calc(8px + var(--mgk-safe-top));
   left: 8px;
@@ -74,9 +163,15 @@ body.mobile-mode-mgk #notifications {
   font-size: 0.85rem;
 }
 
-/* -------------------------------------------- */
-/*  Floating controls                            */
-/* -------------------------------------------- */
+/* 3D dice must land in front of every overlay this module draws. */
+body.mobile-mode-mgk #dice-box-canvas {
+  z-index: 1200 !important;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   Floating controls
+   -------------------------------------------------------------------------- */
 
 body.mobile-mode-mgk #mgk-left-controls,
 body.mobile-mode-mgk #mgk-right-controls {
@@ -95,46 +190,44 @@ body.mobile-mode-mgk #mgk-right-controls { right: calc(16px + var(--mgk-safe-rig
   width: 48px;
   height: 48px;
   min-width: 48px;
+  /* Round here on purpose: the buttons read as coins against the faceted
+     panels, and it keeps thumb targets forgiving. */
   border-radius: 50%;
-  background: var(--mgk-bg-glass);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--mgk-border-glass);
-  color: var(--mgk-text-main);
-  box-shadow: var(--mgk-shadow-lg);
+  background: radial-gradient(120% 120% at 30% 20%, var(--mgk-slate-hi), var(--mgk-ink));
+  border: 1px solid var(--mgk-edge);
+  color: var(--mgk-bone);
+  box-shadow: var(--mgk-shadow), inset 0 1px 0 var(--mgk-edge-soft);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   cursor: pointer;
-  transition: var(--mgk-transition);
+  position: relative;
+  transition: transform 0.16s var(--mgk-ease), border-color 0.16s var(--mgk-ease), color 0.16s var(--mgk-ease);
 }
 
-.mgk-floating-btn:active {
-  transform: scale(0.92);
-  background: rgba(255, 255, 255, 0.2);
-}
+.mgk-floating-btn:active { transform: scale(0.92); }
 
 .mgk-floating-btn.active {
-  border-color: var(--mgk-accent-purple);
-  color: var(--mgk-accent-purple);
+  border-color: var(--mgk-brass);
+  color: var(--mgk-brass);
+  box-shadow: var(--mgk-shadow), 0 0 0 1px var(--mgk-brass-dim);
 }
 
-/* Secondary tool stack that expands out of the left cluster. */
 .mgk-tool-stack {
   display: flex;
   flex-direction: column;
   gap: 10px;
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.25s ease;
+  transition: max-height 0.25s var(--mgk-ease);
 }
 
 .mgk-tool-stack.open { max-height: 60vh; }
 
-/* -------------------------------------------- */
-/*  Avatar carousel                              */
-/* -------------------------------------------- */
+/* --------------------------------------------------------------------------
+   Avatar carousel
+   -------------------------------------------------------------------------- */
 
 body.mobile-mode-mgk #mgk-avatar-carousel {
   position: fixed;
@@ -160,28 +253,23 @@ body.mobile-mode-mgk #mgk-avatar-carousel::-webkit-scrollbar { display: none; }
   min-width: 54px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  box-shadow: var(--mgk-shadow-lg);
+  border: 2px solid var(--mgk-edge);
+  box-shadow: var(--mgk-shadow);
   cursor: pointer;
-  transition: var(--mgk-transition);
+  transition: transform 0.18s var(--mgk-ease), border-color 0.18s var(--mgk-ease);
   position: relative;
   scroll-snap-align: center;
-  background: var(--mgk-bg-dark);
+  background: var(--mgk-ink);
 }
 
 .mgk-avatar-bubble.active {
-  border-color: #ffffff;
+  border-color: var(--mgk-brass);
   transform: scale(1.1);
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
 }
 
-.mgk-avatar-bubble.in-combat { border-color: var(--mgk-hp-red); }
+.mgk-avatar-bubble.in-combat { border-color: var(--mgk-oxide); }
 
-.mgk-avatar-bubble img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+.mgk-avatar-bubble img { width: 100%; height: 100%; object-fit: cover; }
 
 .mgk-avatar-hp {
   position: absolute;
@@ -189,80 +277,74 @@ body.mobile-mode-mgk #mgk-avatar-carousel::-webkit-scrollbar { display: none; }
   right: 0;
   bottom: 0;
   height: 4px;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.65);
 }
 
 .mgk-avatar-hp span {
   display: block;
   height: 100%;
-  background: var(--mgk-hp-green);
-  transition: width 0.3s ease;
+  background: var(--mgk-patina);
+  transition: width 0.3s var(--mgk-ease);
 }
 
-.mgk-avatar-hp.low span { background: var(--mgk-hp-red); }
+.mgk-avatar-hp.low span { background: var(--mgk-oxide); }
 
-/* -------------------------------------------- */
-/*  Drawers                                      */
-/* -------------------------------------------- */
+/* --------------------------------------------------------------------------
+   Drawers
+   -------------------------------------------------------------------------- */
 
 .mgk-sheet-drawer,
 .mgk-drawer-panel {
   position: fixed;
   inset: 0;
-  background: var(--mgk-bg-dark);
+  background: var(--mgk-ink);
   z-index: 1000;
   display: flex;
   flex-direction: column;
   transform: translateY(100%);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  color: var(--mgk-text-main);
+  transition: transform 0.3s var(--mgk-ease);
+  color: var(--mgk-bone);
   overflow: hidden;
   padding-bottom: var(--mgk-safe-bottom);
   padding-top: var(--mgk-safe-top);
 }
 
 .mgk-sheet-drawer.open,
-.mgk-drawer-panel.open {
-  transform: translateY(0);
-}
+.mgk-drawer-panel.open { transform: translateY(0); }
 
-/* Tablets and landscape phones get a side drawer instead of full screen. */
 body.mgk-landscape .mgk-sheet-drawer,
 body.mgk-tablet .mgk-sheet-drawer {
   left: auto;
   width: min(520px, 70vw);
-  border-left: 1px solid var(--mgk-border-glass);
+  border-left: 1px solid var(--mgk-edge);
   transform: translateX(100%);
 }
 
 body.mgk-landscape .mgk-sheet-drawer.open,
-body.mgk-tablet .mgk-sheet-drawer.open {
-  transform: translateX(0);
-}
+body.mgk-tablet .mgk-sheet-drawer.open { transform: translateX(0); }
 
 .mgk-drawer-grab {
   touch-action: none;
-  width: 44px;
-  height: 4px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.25);
-  margin: 8px auto 4px;
+  width: 46px;
+  height: 3px;
+  background: var(--mgk-edge);
+  margin: 9px auto 5px;
   flex: none;
 }
 
-/* -------------------------------------------- */
-/*  Sheet header + nav                           */
-/* -------------------------------------------- */
+/* --------------------------------------------------------------------------
+   Sheet header
+   -------------------------------------------------------------------------- */
 
 .mgk-sheet-header {
   touch-action: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
-  background: rgba(0, 0, 0, 0.3);
-  border-bottom: 1px solid var(--mgk-border-glass);
+  padding: 10px 16px 12px;
+  border-bottom: 1px solid var(--mgk-edge);
   flex: none;
+  gap: 10px;
 }
 
 .mgk-header-left,
@@ -274,17 +356,18 @@ body.mgk-tablet .mgk-sheet-drawer.open {
 }
 
 .mgk-header-avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
+  width: 46px;
+  height: 46px;
   object-fit: cover;
-  border: 1px solid var(--mgk-border-glass);
   flex: none;
+  clip-path: var(--mgk-chamfer-sm);
+  border-radius: 0;
 }
 
 .mgk-header-name {
-  font-size: 1.05rem;
+  font-size: 1.06rem;
   font-weight: 700;
+  letter-spacing: -0.01em;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -292,43 +375,61 @@ body.mgk-tablet .mgk-sheet-drawer.open {
 }
 
 .mgk-header-sub {
-  font-size: 0.78rem;
-  color: var(--mgk-text-muted);
+  font-size: 0.68rem;
+  color: var(--mgk-ash);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* Hit points are the number a player checks most, so they get the facet. */
 .mgk-header-hp {
-  font-size: 1.15rem;
+  font-family: var(--mgk-font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: 1rem;
   font-weight: 700;
-  color: #fff;
-  background: none;
+  color: var(--mgk-bone);
+  background: linear-gradient(158deg, var(--mgk-slate-hi), var(--mgk-slate));
+  box-shadow: inset 0 1px 0 var(--mgk-edge-soft);
+  clip-path: var(--mgk-chamfer-sm);
   border: none;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 8px;
+  padding: 8px 11px;
 }
 
-.mgk-header-hp:active { background: rgba(255, 255, 255, 0.1); }
-.mgk-header-hp .mgk-hp-value { color: var(--mgk-hp-red); }
-.mgk-header-hp .fa-heart { color: var(--mgk-hp-red); font-size: 0.9rem; }
+.mgk-header-hp .mgk-hp-value { color: var(--mgk-brass); font-size: 1.2rem; }
+.mgk-header-hp .fa-heart { color: var(--mgk-oxide); font-size: 0.8rem; }
 
 .mgk-icon-btn {
   background: none;
   border: none;
-  color: var(--mgk-text-muted);
-  font-size: 1.3rem;
+  color: var(--mgk-ash);
+  font-size: 1.25rem;
   cursor: pointer;
-  padding: 6px;
+  padding: 8px;
 }
+
+/* --------------------------------------------------------------------------
+   Tabs — moved to the bottom, where a thumb actually reaches.
+   Ordering is done in CSS so the markup and its handlers stay untouched.
+   -------------------------------------------------------------------------- */
+
+.mgk-drawer-grab { order: 0; }
+.mgk-sheet-header { order: 1; }
+.mgk-sheet-body { order: 2; }
+.mgk-sheet-nav { order: 3; }
 
 .mgk-sheet-nav {
   display: flex;
-  gap: 6px;
-  padding: 8px 12px;
-  background: rgba(0, 0, 0, 0.2);
-  border-bottom: 1px solid var(--mgk-border-glass);
+  gap: 2px;
+  padding: 0 8px;
+  background: var(--mgk-ink);
+  border-top: 1px solid var(--mgk-edge);
   overflow-x: auto;
   scrollbar-width: none;
   flex: none;
@@ -337,20 +438,24 @@ body.mgk-tablet .mgk-sheet-drawer.open {
 .mgk-sheet-nav::-webkit-scrollbar { display: none; }
 
 .mgk-nav-item {
-  padding: 6px 14px;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--mgk-text-muted);
+  padding: 13px 13px 12px;
+  background: none;
+  color: var(--mgk-ash);
   border: none;
-  font-size: 0.85rem;
-  font-weight: 600;
+  border-top: 2px solid transparent;
+  font-family: var(--mgk-font-ui);
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
   cursor: pointer;
   white-space: nowrap;
+  transition: color 0.16s var(--mgk-ease), border-color 0.16s var(--mgk-ease);
 }
 
 .mgk-nav-item.active {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  color: var(--mgk-brass);
+  border-top-color: var(--mgk-brass);
 }
 
 .mgk-sheet-body {
@@ -362,15 +467,15 @@ body.mgk-tablet .mgk-sheet-drawer.open {
 }
 
 .mgk-tab {
-  padding: 12px;
+  padding: 14px 12px 18px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
-/* -------------------------------------------- */
-/*  Stats, abilities, skills                     */
-/* -------------------------------------------- */
+/* --------------------------------------------------------------------------
+   Stats, abilities, skills
+   -------------------------------------------------------------------------- */
 
 .mgk-stat-grid {
   display: grid;
@@ -378,61 +483,56 @@ body.mgk-tablet .mgk-sheet-drawer.open {
   gap: 6px;
 }
 
-.mgk-stat-box {
-  background: var(--mgk-bg-card);
-  border: 1px solid var(--mgk-border-glass);
-  border-radius: var(--mgk-radius-md);
-  padding: 8px 4px;
-  text-align: center;
-}
-
-.mgk-stat-box.tappable:active { background: rgba(255, 255, 255, 0.12); }
+.mgk-stat-box { padding: 9px 4px; text-align: center; }
+.mgk-stat-box.tappable:active { background: var(--mgk-slate-hi); }
 
 .mgk-ability-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 6px;
+  gap: 5px;
 }
 
-.mgk-ability-card {
-  background: var(--mgk-bg-card);
-  border: 1px solid var(--mgk-border-glass);
-  border-radius: 8px;
-  padding: 6px 2px;
-  text-align: center;
-}
+.mgk-ability-card { padding: 7px 2px 6px; text-align: center; }
 
 .mgk-ability-label {
-  font-size: 0.65rem;
-  color: var(--mgk-text-muted);
+  font-size: 0.58rem;
+  color: var(--mgk-ash);
   font-weight: 700;
-  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
 }
 
+/* Every number a player reads off a die is set in the data face. */
 .mgk-ability-score {
-  font-size: 1rem;
+  font-family: var(--mgk-font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.02rem;
   font-weight: 700;
   background: none;
   border: none;
-  color: var(--mgk-text-main);
+  color: var(--mgk-bone);
   width: 100%;
-  padding: 2px 0;
+  padding: 2px 0 1px;
   cursor: pointer;
 }
 
 .mgk-ability-mod {
-  font-size: 0.75rem;
-  color: var(--mgk-accent-purple);
+  font-family: var(--mgk-font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.74rem;
+  color: var(--mgk-brass);
 }
 
 .mgk-save-mod {
-  font-size: 0.62rem;
-  color: var(--mgk-text-muted);
+  font-family: var(--mgk-font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.6rem;
+  color: var(--mgk-ash);
   border: none;
-  border-top: 1px solid var(--mgk-border-glass);
+  border-top: 1px solid var(--mgk-edge);
   background: none;
-  margin-top: 4px;
-  padding-top: 3px;
+  margin-top: 5px;
+  padding-top: 4px;
   width: 100%;
   cursor: pointer;
 }
@@ -440,167 +540,205 @@ body.mgk-tablet .mgk-sheet-drawer.open {
 .mgk-skill-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   width: 100%;
-  padding: 8px 6px;
+  padding: 9px 6px;
   background: none;
   border: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  color: var(--mgk-text-main);
+  border-bottom: 1px solid var(--mgk-edge);
+  color: var(--mgk-bone);
+  font-family: var(--mgk-font-ui);
   font-size: 0.85rem;
   cursor: pointer;
   text-align: left;
 }
 
-.mgk-skill-row:active { background: rgba(255, 255, 255, 0.08); }
+.mgk-skill-row:active { background: var(--mgk-slate-hi); }
 .mgk-skill-name { flex: 1; text-transform: capitalize; }
-.mgk-skill-abil { color: var(--mgk-text-muted); font-size: 0.7rem; }
-.mgk-skill-total { font-weight: 700; min-width: 34px; text-align: right; }
 
+.mgk-skill-abil {
+  color: var(--mgk-ash);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.mgk-skill-total {
+  font-family: var(--mgk-font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  min-width: 38px;
+  text-align: right;
+  color: var(--mgk-brass);
+}
+
+/* Proficiency reads as a filling pip, not a coloured dot. */
 .mgk-prof {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 1px solid var(--mgk-text-muted);
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--mgk-edge);
   flex: none;
+  transform: rotate(45deg);
 }
 
-.mgk-prof.half { background: linear-gradient(90deg, var(--mgk-accent-blue) 50%, transparent 50%); }
-.mgk-prof.proficient { background: var(--mgk-accent-blue); border-color: var(--mgk-accent-blue); }
-.mgk-prof.expertise { background: var(--mgk-accent-purple); border-color: var(--mgk-accent-purple); }
+.mgk-prof.half { background: linear-gradient(90deg, var(--mgk-brass) 50%, transparent 50%); border-color: var(--mgk-brass-dim); }
+.mgk-prof.proficient { background: var(--mgk-brass); border-color: var(--mgk-brass); }
+.mgk-prof.expertise { background: var(--mgk-patina); border-color: var(--mgk-patina); }
 
-/* -------------------------------------------- */
-/*  Quick action row                             */
-/* -------------------------------------------- */
+/* --------------------------------------------------------------------------
+   Quick action row
+   -------------------------------------------------------------------------- */
 
-.mgk-actions-row {
-  display: flex;
-  gap: 6px;
-}
+.mgk-actions-row { display: flex; gap: 5px; }
 
 .mgk-action-btn {
   flex: 1;
-  padding: 8px 2px;
-  background: var(--mgk-bg-card);
-  border: 1px solid var(--mgk-border-glass);
-  border-radius: 8px;
-  color: var(--mgk-text-main);
-  font-size: 0.62rem;
+  padding: 9px 2px 7px;
+  color: var(--mgk-bone);
+  font-size: 0.56rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   cursor: pointer;
 }
 
-/* -------------------------------------------- */
-/*  Sections and rows                            */
-/* -------------------------------------------- */
+.mgk-action-btn i { color: var(--mgk-ash); font-size: 0.9rem; }
 
-.mgk-section {
-  background: var(--mgk-bg-card);
-  border: 1px solid var(--mgk-border-glass);
-  border-radius: var(--mgk-radius-md);
-  overflow: hidden;
-}
+/* --------------------------------------------------------------------------
+   Sections and rows
+   -------------------------------------------------------------------------- */
+
+.mgk-section { overflow: hidden; }
 
 .mgk-section-title {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
+  padding: 11px 13px;
+  font-size: 0.68rem;
   font-weight: 700;
-  font-size: 0.92rem;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--mgk-bone);
   cursor: pointer;
   list-style: none;
+  border-bottom: 1px solid transparent;
+}
+
+.mgk-section[open] > .mgk-section-title {
+  border-bottom-color: var(--mgk-edge);
+  color: var(--mgk-brass);
 }
 
 .mgk-section-title::-webkit-details-marker { display: none; }
 .mgk-section[open] > .mgk-section-title .fa-chevron-down { transform: rotate(180deg); }
-.mgk-section-title .fa-chevron-down { transition: transform 0.2s ease; color: var(--mgk-text-muted); }
-.mgk-count { color: var(--mgk-text-muted); font-weight: 400; }
-.mgk-section-body { padding: 0 8px 8px; }
 
+.mgk-section-title .fa-chevron-down {
+  transition: transform 0.2s var(--mgk-ease);
+  color: var(--mgk-ash);
+  font-size: 0.7rem;
+}
+
+.mgk-count {
+  color: var(--mgk-ash);
+  font-family: var(--mgk-font-data);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.mgk-section-body { padding: 6px; }
+
+/* A row is a rule with a lit left edge, like a line ruled on a sheet. */
 .mgk-row {
-  border-radius: 8px;
-  margin-bottom: 4px;
-  background: rgba(255, 255, 255, 0.03);
+  margin-bottom: 3px;
+  background: transparent;
+  border-left: 2px solid var(--mgk-edge);
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
+  clip-path: none;
+  transition: border-color 0.16s var(--mgk-ease), background 0.16s var(--mgk-ease);
 }
+
+.mgk-row.expanded { border-left-color: var(--mgk-brass); background: var(--mgk-slate); }
 
 .mgk-row-main {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px;
+  gap: 9px;
+  padding: 9px 8px;
   min-width: 0;
   cursor: pointer;
 }
 
-.mgk-row-main:active { background: rgba(255, 255, 255, 0.06); }
+.mgk-row-main:active { background: var(--mgk-slate-hi); }
 
 .mgk-row-img {
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
+  width: 30px;
+  height: 30px;
   object-fit: cover;
   flex: none;
+  clip-path: var(--mgk-chamfer-sm);
 }
 
-.mgk-row-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  flex: 1;
-}
+.mgk-row-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 
 .mgk-row-name {
-  font-size: 0.88rem;
+  font-size: 0.87rem;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.mgk-row-sub { font-size: 0.7rem; color: var(--mgk-text-muted); }
+.mgk-row-sub {
+  font-size: 0.62rem;
+  color: var(--mgk-ash);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
 
 .mgk-row-chips { display: flex; gap: 4px; flex: none; }
 
+/* Dice notation, typeset as notation. */
 .mgk-chip {
-  font-size: 0.72rem;
-  padding: 2px 8px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--mgk-text-muted);
+  font-family: var(--mgk-font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.7rem;
+  padding: 3px 7px;
+  background: var(--mgk-slate-hi);
+  color: var(--mgk-ash);
   border: none;
   white-space: nowrap;
 }
 
-.mgk-chip.tappable { color: var(--mgk-text-main); cursor: pointer; }
+.mgk-chip.tappable { color: var(--mgk-brass); cursor: pointer; }
 
 .mgk-row-action {
-  background: var(--mgk-accent-gradient);
-  border: none;
-  border-radius: 8px;
-  color: #fff;
+  background: transparent;
+  border: 1px solid var(--mgk-brass-dim);
+  color: var(--mgk-brass);
   min-width: 44px;
   min-height: 36px;
-  margin: 6px 8px 6px 0;
+  margin: 5px 7px 5px 0;
   cursor: pointer;
   font-size: 0.8rem;
+  clip-path: var(--mgk-chamfer-sm);
+  transition: background 0.16s var(--mgk-ease);
 }
 
-.mgk-row-action:active { filter: brightness(1.25); }
+.mgk-row-action:active { background: var(--mgk-brass); color: var(--mgk-ink); }
 
 .mgk-row-detail {
   grid-column: 1 / -1;
   display: none;
-  padding: 4px 10px 10px;
+  padding: 2px 11px 11px;
   font-size: 0.82rem;
-  color: var(--mgk-text-muted);
-  line-height: 1.45;
+  color: var(--mgk-ash);
+  line-height: 1.5;
   user-select: text;
   -webkit-user-select: text;
 }
@@ -609,15 +747,17 @@ body.mgk-tablet .mgk-sheet-drawer.open {
 .mgk-row-detail img { max-width: 100%; height: auto; }
 
 .mgk-empty {
-  padding: 14px;
+  padding: 16px;
   text-align: center;
-  color: var(--mgk-text-muted);
-  font-size: 0.85rem;
+  color: var(--mgk-ash);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
-/* -------------------------------------------- */
-/*  Currency, encumbrance, pips                  */
-/* -------------------------------------------- */
+/* --------------------------------------------------------------------------
+   Currency, encumbrance, slot pips
+   -------------------------------------------------------------------------- */
 
 .mgk-currency {
   display: grid;
@@ -625,104 +765,126 @@ body.mgk-tablet .mgk-sheet-drawer.open {
   grid-auto-columns: 1fr;
   gap: 4px;
   text-align: center;
-  background: var(--mgk-bg-card);
-  padding: 8px;
-  border-radius: 8px;
-  border: 1px solid var(--mgk-border-glass);
+  padding: 10px 8px;
 }
 
-.mgk-currency small { color: var(--mgk-text-muted); font-size: 0.65rem; }
+.mgk-currency small {
+  color: var(--mgk-ash);
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  display: block;
+  margin-bottom: 2px;
+}
 
-.mgk-encumbrance { padding: 4px 2px; }
-.mgk-encumbrance small { color: var(--mgk-text-muted); font-size: 0.7rem; }
+.mgk-currency div div {
+  font-family: var(--mgk-font-data);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.mgk-encumbrance { padding: 2px 2px 0; }
+
+.mgk-encumbrance small {
+  color: var(--mgk-ash);
+  font-family: var(--mgk-font-data);
+  font-size: 0.66rem;
+}
 
 .mgk-bar {
-  height: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
+  height: 3px;
+  background: var(--mgk-edge);
   overflow: hidden;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 
-.mgk-bar span { display: block; height: 100%; background: var(--mgk-accent-gradient); }
+.mgk-bar span { display: block; height: 100%; background: var(--mgk-brass); }
 
-.mgk-pips { display: inline-flex; gap: 3px; margin-left: 6px; vertical-align: middle; }
+.mgk-pips { display: inline-flex; gap: 4px; margin-left: 8px; vertical-align: middle; }
 
+/* Slots read as unspent dice: small cut squares that fill with brass. */
 .mgk-pip {
-  width: 9px;
-  height: 9px;
-  border-radius: 2px;
-  border: 1px solid var(--mgk-accent-purple);
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--mgk-brass-dim);
+  transform: rotate(45deg);
 }
 
-.mgk-pip.filled { background: var(--mgk-accent-purple); }
+.mgk-pip.filled { background: var(--mgk-brass); }
 
-/* -------------------------------------------- */
-/*  Status / condition grid                      */
-/* -------------------------------------------- */
+/* --------------------------------------------------------------------------
+   Conditions
+   -------------------------------------------------------------------------- */
 
 .mgk-status-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
-  gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 5px;
 }
 
 .mgk-status {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid transparent;
-  color: var(--mgk-text-muted);
-  font-size: 0.68rem;
+  gap: 7px;
+  padding: 8px 7px;
+  color: var(--mgk-ash);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   cursor: pointer;
   text-align: left;
 }
 
-.mgk-status img { width: 18px; height: 18px; flex: none; filter: invert(1) opacity(0.6); }
+.mgk-status img { width: 17px; height: 17px; flex: none; filter: grayscale(1) opacity(0.5); }
 .mgk-status span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 .mgk-status.active {
-  border-color: var(--mgk-accent-purple);
-  color: var(--mgk-text-main);
-  background: rgba(139, 92, 246, 0.15);
+  color: var(--mgk-ink);
+  background: linear-gradient(158deg, var(--mgk-brass), var(--mgk-brass-dim));
+  font-weight: 700;
 }
+
 .mgk-status.active img { filter: none; }
 
-/* -------------------------------------------- */
-/*  Misc sheet widgets                           */
-/* -------------------------------------------- */
+/* --------------------------------------------------------------------------
+   Misc sheet widgets
+   -------------------------------------------------------------------------- */
 
 .mgk-kv {
   display: flex;
   justify-content: space-between;
-  padding: 6px 4px;
-  font-size: 0.82rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 8px 4px;
+  font-size: 0.8rem;
+  border-bottom: 1px solid var(--mgk-edge);
   text-transform: capitalize;
 }
 
-.mgk-rest-row { display: flex; gap: 8px; }
+.mgk-kv span:last-child {
+  font-family: var(--mgk-font-data);
+  font-variant-numeric: tabular-nums;
+  color: var(--mgk-brass);
+}
+
+.mgk-rest-row { display: flex; gap: 6px; }
 
 .mgk-big-btn {
   flex: 1;
-  padding: 12px;
-  border-radius: var(--mgk-radius-md);
-  background: var(--mgk-bg-card);
-  border: 1px solid var(--mgk-border-glass);
-  color: var(--mgk-text-main);
-  font-size: 0.85rem;
-  font-weight: 600;
+  padding: 14px 10px;
+  color: var(--mgk-bone);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
   cursor: pointer;
 }
 
+.mgk-big-btn i { color: var(--mgk-brass); margin-right: 6px; }
 .mgk-big-btn.wide { width: 100%; }
-.mgk-big-btn:active { background: rgba(255, 255, 255, 0.12); }
+.mgk-big-btn:active { background: var(--mgk-slate-hi); }
 
-/* -------------------------------------------- */
-/*  HP widget                                    */
-/* -------------------------------------------- */
+/* --------------------------------------------------------------------------
+   HP editor
+   -------------------------------------------------------------------------- */
 
 .mgk-hp-widget {
   position: fixed;
@@ -731,30 +893,36 @@ body.mgk-tablet .mgk-sheet-drawer.open {
   transform: translate(-50%, -50%);
   z-index: 1100;
   width: min(300px, 88vw);
-  padding: 14px;
-  border-radius: var(--mgk-radius-lg);
-  background: var(--mgk-bg-dark);
-  border: 1px solid var(--mgk-accent-purple);
-  box-shadow: var(--mgk-shadow-lg);
-  color: var(--mgk-text-main);
+  padding: 16px;
+  background: linear-gradient(158deg, var(--mgk-slate-hi), var(--mgk-ink));
+  box-shadow: var(--mgk-shadow), inset 0 1px 0 var(--mgk-edge-soft);
+  color: var(--mgk-bone);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 11px;
 }
 
-.mgk-hp-total { text-align: center; font-size: 1.4rem; font-weight: 700; }
+.mgk-hp-total {
+  text-align: center;
+  font-family: var(--mgk-font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--mgk-brass);
+  letter-spacing: 0.02em;
+}
 
 .mgk-hp-stepper { display: flex; align-items: center; gap: 8px; }
 
 .mgk-hp-step {
   width: 44px;
   height: 44px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--mgk-border-glass);
-  color: var(--mgk-text-main);
+  background: var(--mgk-slate);
+  border: 1px solid var(--mgk-edge);
+  color: var(--mgk-bone);
   font-size: 1rem;
   cursor: pointer;
+  clip-path: var(--mgk-chamfer-sm);
 }
 
 .mgk-hp-amount,
@@ -762,37 +930,43 @@ body.mgk-tablet .mgk-sheet-drawer.open {
   flex: 1;
   min-width: 0;
   height: 44px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid var(--mgk-accent-purple);
-  color: var(--mgk-text-main);
+  background: var(--mgk-ink);
+  border: 1px solid var(--mgk-brass-dim);
+  color: var(--mgk-bone);
   text-align: center;
+  font-family: var(--mgk-font-data);
+  font-variant-numeric: tabular-nums;
   font-size: 1.1rem;
   font-weight: 700;
+  border-radius: 0;
 }
 
 .mgk-hp-actions { display: flex; gap: 8px; }
 
 .mgk-hp-actions button {
   flex: 1;
-  height: 40px;
+  height: 42px;
   border: none;
-  border-radius: 10px;
-  color: #fff;
+  color: var(--mgk-ink);
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   cursor: pointer;
+  clip-path: var(--mgk-chamfer-sm);
 }
 
-.mgk-hp-heal { background: var(--mgk-hp-green); }
-.mgk-hp-damage { background: var(--mgk-hp-red); }
+.mgk-hp-heal { background: var(--mgk-patina); }
+.mgk-hp-damage { background: var(--mgk-oxide); }
 
 .mgk-hp-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.8rem;
-  color: var(--mgk-text-muted);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--mgk-ash);
 }
 
 .mgk-hp-row input { height: 34px; font-size: 0.9rem; max-width: 70px; }
@@ -800,29 +974,38 @@ body.mgk-tablet .mgk-sheet-drawer.open {
 .mgk-hp-row button {
   width: 34px;
   height: 34px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--mgk-border-glass);
-  color: var(--mgk-text-main);
+  background: var(--mgk-slate);
+  border: 1px solid var(--mgk-edge);
+  color: var(--mgk-bone);
   cursor: pointer;
+  clip-path: var(--mgk-chamfer-sm);
 }
 
 .mgk-hp-row span:first-child { flex: 1; }
 
-/* -------------------------------------------- */
-/*  Chat & macro drawers                         */
-/* -------------------------------------------- */
+/* --------------------------------------------------------------------------
+   Chat and macro drawers
+   -------------------------------------------------------------------------- */
 
 .mgk-drawer-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--mgk-border-glass);
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--mgk-edge);
   flex: none;
 }
 
-.mgk-drawer-header h3 { margin: 0; font-size: 1rem; color: #fff; }
+.mgk-drawer-header h3 {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--mgk-brass);
+}
+
+.mgk-drawer-header h3 i { margin-right: 7px; }
 
 .mgk-drawer-body {
   flex: 1;
@@ -839,7 +1022,7 @@ body.mgk-tablet .mgk-sheet-drawer.open {
   display: flex;
   gap: 8px;
   padding: 10px;
-  border-top: 1px solid var(--mgk-border-glass);
+  border-top: 1px solid var(--mgk-edge);
   flex: none;
 }
 
@@ -847,56 +1030,55 @@ body.mgk-tablet .mgk-sheet-drawer.open {
   flex: 1;
   min-width: 0;
   height: 42px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid var(--mgk-border-glass);
-  color: var(--mgk-text-main);
+  background: var(--mgk-slate);
+  border: 1px solid var(--mgk-edge);
+  color: var(--mgk-bone);
   padding: 0 12px;
   font-size: 0.9rem;
+  border-radius: 0;
 }
 
 .mgk-chat-form button {
   width: 48px;
-  border-radius: 10px;
   border: none;
-  background: var(--mgk-accent-gradient);
-  color: #fff;
+  background: var(--mgk-brass);
+  color: var(--mgk-ink);
   cursor: pointer;
+  clip-path: var(--mgk-chamfer-sm);
 }
 
-/* Foundry chat cards need room to breathe inside the drawer. */
 #mgk-chat-content .chat-message {
   margin-bottom: 8px;
-  border-radius: 8px;
   font-size: 0.85rem;
+  border-radius: 0;
 }
 
-#mgk-chat-content .chat-message button {
-  min-height: 34px;
-}
+#mgk-chat-content .chat-message button { min-height: 34px; }
 
 .mgk-macro-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 10px;
-  /* Pointer-based reordering needs the browser to stop claiming the gesture. */
+  gap: 8px;
   touch-action: none;
 }
 
 .mgk-macro-slot {
   aspect-ratio: 1;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--mgk-border-glass);
-  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--mgk-text-muted);
+  color: var(--mgk-ash);
+  font-family: var(--mgk-font-data);
   cursor: pointer;
   padding: 0;
 }
 
-.mgk-macro-slot img { width: 32px; height: 32px; border-radius: 6px; }
+.mgk-macro-slot img { width: 30px; height: 30px; clip-path: var(--mgk-chamfer-sm); }
+.mgk-macro-slot.dragging { opacity: 0.4; transform: scale(0.92); }
+
+.mgk-macro-slot.drop-target {
+  background: linear-gradient(158deg, var(--mgk-brass), var(--mgk-brass-dim));
+}
 
 .mgk-macro-pager {
   display: flex;
@@ -904,24 +1086,25 @@ body.mgk-tablet .mgk-sheet-drawer.open {
   justify-content: center;
   gap: 14px;
   padding: 10px;
-  color: var(--mgk-text-muted);
-  font-size: 0.85rem;
+  color: var(--mgk-ash);
+  font-family: var(--mgk-font-data);
+  font-size: 0.8rem;
   flex: none;
 }
 
 .mgk-macro-pager button {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--mgk-border-glass);
-  color: var(--mgk-text-main);
-  border-radius: 8px;
+  background: var(--mgk-slate);
+  border: 1px solid var(--mgk-edge);
+  color: var(--mgk-bone);
   width: 40px;
   height: 34px;
   cursor: pointer;
+  clip-path: var(--mgk-chamfer-sm);
 }
 
-/* -------------------------------------------- */
-/*  Template placer                              */
-/* -------------------------------------------- */
+/* --------------------------------------------------------------------------
+   Template placer
+   -------------------------------------------------------------------------- */
 
 .mgk-template-toolbar {
   position: fixed;
@@ -932,125 +1115,91 @@ body.mgk-tablet .mgk-sheet-drawer.open {
   width: min(420px, calc(100vw - 24px));
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px;
-  border-radius: var(--mgk-radius-lg);
-  background: var(--mgk-bg-glass);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--mgk-border-glass);
-  box-shadow: var(--mgk-shadow-lg);
-  color: var(--mgk-text-main);
+  gap: 9px;
+  padding: 12px;
+  background: linear-gradient(158deg, var(--mgk-slate-hi), var(--mgk-ink));
+  box-shadow: var(--mgk-shadow), inset 0 1px 0 var(--mgk-edge-soft);
+  color: var(--mgk-bone);
 }
 
-/* The placer owns the bottom of the screen while it is open. */
 body.mgk-placing-template #mgk-avatar-carousel,
-body.mgk-placing-template #mgk-right-controls {
-  display: none;
-}
+body.mgk-placing-template #mgk-right-controls { display: none; }
 
-.mgk-template-shapes {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-}
+.mgk-template-shapes { display: flex; gap: 7px; justify-content: center; }
 
 .mgk-template-shape {
-  width: 44px;
+  width: 46px;
   height: 40px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--mgk-border-glass);
-  color: var(--mgk-text-muted);
+  background: var(--mgk-slate);
+  border: 1px solid var(--mgk-edge);
+  color: var(--mgk-ash);
   cursor: pointer;
 }
 
 .mgk-template-shape.active {
-  background: rgba(139, 92, 246, 0.2);
-  border-color: var(--mgk-accent-purple);
-  color: var(--mgk-text-main);
+  border-color: var(--mgk-brass);
+  color: var(--mgk-brass);
 }
 
 .mgk-template-readout {
   text-align: center;
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-family: var(--mgk-font-data);
   font-variant-numeric: tabular-nums;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--mgk-brass);
 }
 
-.mgk-template-rotate {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--mgk-text-muted);
-}
+.mgk-template-rotate { display: flex; align-items: center; gap: 10px; color: var(--mgk-ash); }
 
 .mgk-template-rotate input {
   flex: 1;
   min-width: 0;
-  accent-color: var(--mgk-accent-purple);
+  accent-color: var(--mgk-brass);
   height: 28px;
 }
 
-.mgk-template-confirm {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-}
+.mgk-template-confirm { display: flex; gap: 10px; justify-content: center; }
 
 .mgk-template-confirm button {
-  width: 56px;
+  width: 58px;
   height: 44px;
-  border-radius: 12px;
   border: none;
-  color: #fff;
-  font-size: 1.1rem;
+  color: var(--mgk-ink);
+  font-size: 1.05rem;
   cursor: pointer;
+  clip-path: var(--mgk-chamfer-sm);
 }
 
-.mgk-template-ok { background: var(--mgk-hp-green); }
-.mgk-template-cancel { background: var(--mgk-hp-red); }
+.mgk-template-ok { background: var(--mgk-patina); }
+.mgk-template-cancel { background: var(--mgk-oxide); }
 
-/* -------------------------------------------- */
-/*  Chat card stack                              */
-/* -------------------------------------------- */
+/* --------------------------------------------------------------------------
+   Chat card stack
+   -------------------------------------------------------------------------- */
 
 .mgk-chat-stack {
   position: fixed;
   left: 50%;
+  /* Sits above the floating controls by construction, so a roll is always
+     one tap away even while a message is on screen. */
+  bottom: var(--mgk-controls-clear);
   transform: translate(-50%, calc(100% + 40px));
-  bottom: calc(16px + var(--mgk-safe-bottom));
   z-index: 880;
   width: min(440px, calc(100vw - 24px));
-  max-height: 45vh;
+  max-height: 40vh;
   display: flex;
   flex-direction: column;
-  border-radius: var(--mgk-radius-lg);
-  background: var(--mgk-bg-glass);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--mgk-border-glass);
-  box-shadow: var(--mgk-shadow-lg);
-  color: var(--mgk-text-main);
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  background: linear-gradient(158deg, var(--mgk-slate-hi), var(--mgk-ink));
+  box-shadow: var(--mgk-shadow), inset 0 1px 0 var(--mgk-edge-soft);
+  color: var(--mgk-bone);
+  transition: transform 0.28s var(--mgk-ease);
   overflow: hidden;
 }
 
 .mgk-chat-stack.open { transform: translate(-50%, 0); }
 
-/* The card sits where the carousel would be, so move the carousel out. */
 body.mgk-stack-open #mgk-avatar-carousel { display: none; }
-
-/* --mgk-stack-height is published by ChatStack from the card's real height. */
-body.mgk-stack-open #mgk-left-controls,
-body.mgk-stack-open #mgk-right-controls {
-  transform: translateY(calc(-1 * (var(--mgk-stack-height, 0px) + 8px)));
-}
-
-#mgk-left-controls,
-#mgk-right-controls {
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-}
 
 .mgk-stack-card {
   flex: 1;
@@ -1058,7 +1207,7 @@ body.mgk-stack-open #mgk-right-controls {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   touch-action: pan-y;
-  padding: 4px 10px;
+  padding: 4px 12px;
   user-select: text;
   -webkit-user-select: text;
 }
@@ -1072,40 +1221,86 @@ body.mgk-stack-open #mgk-right-controls {
   font-size: 0.85rem;
 }
 
-.mgk-stack-card .message-header { font-size: 0.78rem; }
-.mgk-stack-card .dice-total { font-size: 1.5rem; }
+.mgk-stack-card .message-header {
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--mgk-ash);
+}
+
+.mgk-stack-card .dice-total {
+  font-family: var(--mgk-font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.6rem;
+  color: var(--mgk-brass);
+}
+
 .mgk-stack-card button { min-height: 34px; }
 
-.mgk-stack-pager {
+.mgk-stack-pager,
+.mgk-stack-scrub {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 6px 10px calc(6px + var(--mgk-safe-bottom));
-  border-top: 1px solid var(--mgk-border-glass);
-  font-size: 0.8rem;
-  color: var(--mgk-text-muted);
-  font-variant-numeric: tabular-nums;
+  gap: 10px;
+  padding: 7px 10px;
+  border-top: 1px solid var(--mgk-edge);
+  font-size: 0.78rem;
+  color: var(--mgk-ash);
+  flex: none;
 }
 
-.mgk-stack-pager button:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
+.mgk-stack-pager[hidden],
+.mgk-stack-scrub[hidden] { display: none; }
 
-.mgk-stack-pager button {
-  width: 40px;
+.mgk-stack-pager button,
+.mgk-stack-scrub button {
+  background: var(--mgk-slate);
+  border: 1px solid var(--mgk-edge);
+  color: var(--mgk-bone);
+  min-width: 40px;
   height: 32px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--mgk-border-glass);
-  color: var(--mgk-text-main);
   cursor: pointer;
+  clip-path: var(--mgk-chamfer-sm);
 }
 
-/* -------------------------------------------- */
-/*  Sheet-only mode                              */
-/* -------------------------------------------- */
+.mgk-stack-pager button:disabled { opacity: 0.3; cursor: default; }
+
+/* The counter is a control: tapping it opens the scrubber. */
+.mgk-stack-count {
+  font-family: var(--mgk-font-data);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: var(--mgk-brass) !important;
+  border-color: var(--mgk-brass-dim) !important;
+  padding: 0 12px;
+}
+
+.mgk-stack-scrub input[type="range"] {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--mgk-brass);
+  height: 32px;
+}
+
+#mgk-stack-scrub-label {
+  font-family: var(--mgk-font-data);
+  font-variant-numeric: tabular-nums;
+  color: var(--mgk-brass);
+  min-width: 62px;
+  text-align: center;
+}
+
+#mgk-stack-latest {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0 10px;
+}
+
+/* --------------------------------------------------------------------------
+   Sheet-only mode
+   -------------------------------------------------------------------------- */
 
 #mgk-static-bg {
   position: fixed;
@@ -1113,22 +1308,20 @@ body.mgk-stack-open #mgk-right-controls {
   z-index: 0;
   background-size: cover;
   background-position: center;
-  background-color: #0c0d14;
+  background-color: var(--mgk-ink);
 }
 
 #mgk-static-bg::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(12, 13, 20, 0.35) 0%, rgba(12, 13, 20, 0.8) 100%);
+  background: linear-gradient(180deg, rgba(15, 20, 17, 0.3) 0%, rgba(15, 20, 17, 0.85) 100%);
 }
 
 #mgk-static-bg.empty { background-image: none; }
 
 body.mgk-sheet-only #board,
-body.mgk-sheet-only #canvas {
-  display: none !important;
-}
+body.mgk-sheet-only #canvas { display: none !important; }
 
 .mgk-radar {
   position: fixed;
@@ -1137,41 +1330,34 @@ body.mgk-sheet-only #canvas {
   z-index: 870;
   border-radius: 50%;
   overflow: hidden;
-  border: 1px solid var(--mgk-border-glass);
-  box-shadow: var(--mgk-shadow-lg);
+  border: 1px solid var(--mgk-edge);
+  box-shadow: var(--mgk-shadow);
   width: 140px;
   height: 140px;
 }
 
 .mgk-radar canvas { width: 100%; height: 100%; display: block; }
 
-/* -------------------------------------------- */
-/*  Macro drag state                             */
-/* -------------------------------------------- */
+/* --------------------------------------------------------------------------
+   Unread badge
+   -------------------------------------------------------------------------- */
 
-.mgk-macro-slot.dragging { opacity: 0.4; transform: scale(0.92); }
-
-.mgk-macro-slot.drop-target {
-  border-color: var(--mgk-accent-purple);
-  background: rgba(139, 92, 246, 0.2);
-}
-
-/* Unread badge on the chat toggle. */
 .mgk-badge {
   position: absolute;
-  top: -4px;
-  right: -4px;
+  top: -3px;
+  right: -3px;
   min-width: 18px;
   height: 18px;
   padding: 0 4px;
-  border-radius: 9px;
-  background: var(--mgk-hp-red);
-  color: #fff;
-  font-size: 0.65rem;
+  background: var(--mgk-oxide);
+  color: var(--mgk-bone);
+  font-family: var(--mgk-font-data);
+  font-size: 0.62rem;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
+  clip-path: var(--mgk-chamfer-sm);
 }
 
 #mgk-right-controls .mgk-floating-btn { position: relative; }
