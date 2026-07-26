@@ -63,7 +63,9 @@
       "ClearAll": "Remove my templates",
       "NoneToRemove": "You have no templates on this scene.",
       "Cancel": "Cancel",
-      "Confirm": "Place"
+      "Confirm": "Place",
+      "PlaceFailed": "Could not place the template.",
+      "RemoveFailed": "Could not remove the templates."
     },
     "Standalone": {
       "Radar": "Radar"

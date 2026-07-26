@@ -241,6 +241,7 @@ body.mgk-tablet .mgk-sheet-drawer.open {
 }
 
 .mgk-drawer-grab {
+  touch-action: none;
   width: 44px;
   height: 4px;
   border-radius: 2px;
@@ -254,6 +255,7 @@ body.mgk-tablet .mgk-sheet-drawer.open {
 /* -------------------------------------------- */
 
 .mgk-sheet-header {
+  touch-action: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -356,6 +358,7 @@ body.mgk-tablet .mgk-sheet-drawer.open {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 .mgk-tab {
@@ -826,6 +829,7 @@ body.mgk-tablet .mgk-sheet-drawer.open {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  touch-action: pan-y;
   padding: 10px;
   user-select: text;
   -webkit-user-select: text;
@@ -1037,11 +1041,23 @@ body.mgk-placing-template #mgk-right-controls {
 /* The card sits where the carousel would be, so move the carousel out. */
 body.mgk-stack-open #mgk-avatar-carousel { display: none; }
 
+/* --mgk-stack-height is published by ChatStack from the card's real height. */
+body.mgk-stack-open #mgk-left-controls,
+body.mgk-stack-open #mgk-right-controls {
+  transform: translateY(calc(-1 * (var(--mgk-stack-height, 0px) + 8px)));
+}
+
+#mgk-left-controls,
+#mgk-right-controls {
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .mgk-stack-card {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  touch-action: pan-y;
   padding: 4px 10px;
   user-select: text;
   -webkit-user-select: text;
@@ -1070,6 +1086,11 @@ body.mgk-stack-open #mgk-avatar-carousel { display: none; }
   font-size: 0.8rem;
   color: var(--mgk-text-muted);
   font-variant-numeric: tabular-nums;
+}
+
+.mgk-stack-pager button:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .mgk-stack-pager button {

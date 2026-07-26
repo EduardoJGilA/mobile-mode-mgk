@@ -1,4 +1,5 @@
 import { SocketUtil } from '../core/socket-util.js';
+import { TemplatePlacer } from './template-placer.js';
 import { t } from '../core/utils.js';
 
 const TAP_SLOP = 12;          // px of travel still considered a tap
@@ -84,6 +85,11 @@ export class TouchGestureHandler {
   /* -------------------------------------------- */
 
   onTouchStart(e) {
+    // Self-heal: if something suspended gestures and then failed to resume
+    // them, the player would be stuck unable to move tokens until a reload.
+    // The template placer is the only legitimate reason to stay suspended.
+    if (this.suspended && !TemplatePlacer.active) this.suspended = false;
+
     // While suspended only two-finger pan/zoom stays available.
     if (this.suspended && e.touches.length < 2) return;
 

@@ -240,31 +240,58 @@ export class SheetManager {
   /*  Gestures                                    */
   /* -------------------------------------------- */
 
+  /**
+   * Swipe handling is deliberately narrow.
+   *
+   * Listening on the whole panel meant an ordinary scroll through a long
+   * inventory registered as a swipe, so the sheet changed tab or closed while
+   * the player was only trying to read. Horizontal tab changes now require a
+   * clearly horizontal gesture that does not start on a control, and closing
+   * is only possible from the header and grab handle.
+   */
   static attachSwipe(panel) {
     const body = panel.querySelector("#mgk-sheet-body");
+
+    // Pull down to close, from the header area only.
+    const header = panel.querySelector(".mgk-sheet-header");
+    const grab = panel.querySelector(".mgk-drawer-grab");
+    let headerStartY = 0;
+
+    for (const region of [header, grab]) {
+      region.addEventListener("touchstart", (ev) => {
+        headerStartY = ev.touches[0]?.clientY ?? 0;
+      }, { passive: true });
+
+      region.addEventListener("touchend", (ev) => {
+        const dy = (ev.changedTouches[0]?.clientY ?? 0) - headerStartY;
+        if (dy > SWIPE_CLOSE_PX) this.close();
+      }, { passive: true });
+    }
+
+    // Horizontal tab change, from the scrollable body.
     let startX = 0;
     let startY = 0;
-    let atTop = true;
     let tracking = false;
 
-    panel.addEventListener("touchstart", (ev) => {
-      if (ev.touches.length !== 1) return (tracking = false);
-      tracking = true;
+    body.addEventListener("touchstart", (ev) => {
+      tracking = ev.touches.length === 1 && !ev.target.closest("button, input, a, .mgk-row-detail");
+      if (!tracking) return;
       startX = ev.touches[0].clientX;
       startY = ev.touches[0].clientY;
-      atTop = body.scrollTop <= 0;
     }, { passive: true });
 
-    panel.addEventListener("touchend", (ev) => {
+    body.addEventListener("touchend", (ev) => {
       if (!tracking || ev.changedTouches.length !== 1) return;
       tracking = false;
 
       const dx = ev.changedTouches[0].clientX - startX;
       const dy = ev.changedTouches[0].clientY - startY;
 
-      // Vertical wins only when pulling down from an already-scrolled-to-top body.
-      if (atTop && dy > SWIPE_CLOSE_PX && Math.abs(dy) > Math.abs(dx)) return this.close();
-      if (Math.abs(dx) > SWIPE_TAB_PX && Math.abs(dx) > Math.abs(dy)) this.cycleTab(dx < 0 ? 1 : -1);
+      // Must be decisively horizontal, or it was a scroll.
+      if (Math.abs(dx) < SWIPE_TAB_PX) return;
+      if (Math.abs(dy) > Math.abs(dx) * 0.5) return;
+
+      this.cycleTab(dx < 0 ? 1 : -1);
     }, { passive: true });
   }
 }

@@ -63,7 +63,9 @@
       "ClearAll": "Eliminar mis plantillas",
       "NoneToRemove": "No tienes plantillas en esta escena.",
       "Cancel": "Cancelar",
-      "Confirm": "Colocar"
+      "Confirm": "Colocar",
+      "PlaceFailed": "No se pudo colocar la plantilla.",
+      "RemoveFailed": "No se pudieron eliminar las plantillas."
     },
     "Standalone": {
       "Radar": "Radar"

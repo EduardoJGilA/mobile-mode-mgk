@@ -52,7 +52,7 @@ export class QuickControls {
     const on = (id, fn) => container.querySelector(`#${id}`).addEventListener("click", fn);
 
     on("mgk-btn-settings", () => game.settings.sheet.render(true));
-    on("mgk-btn-ruler", () => this.activateTool(["tokens", "token"], "ruler"));
+    on("mgk-btn-ruler", () => this.toggleTool(container.querySelector("#mgk-btn-ruler"), "ruler"));
     on("mgk-btn-template", () => {
       const button = container.querySelector("#mgk-btn-template");
       TemplatePlacer.toggle();
@@ -89,6 +89,30 @@ export class QuickControls {
   }
 
   /* -------------------------------------------- */
+
+  static activeTool = null;
+
+  /**
+   * Tools such as the ruler stay active until something switches back to
+   * "select". With the native scene controls hidden there is no other way out,
+   * so every tool button here is a toggle and releasing it restores select.
+   */
+  static toggleTool(button, tool) {
+    if (this.activeTool === tool) return this.releaseTool();
+
+    if (this.activateTool(["tokens", "token"], tool)) {
+      this.activeTool = tool;
+      button?.classList.add("active");
+    }
+  }
+
+  /** Return to the select tool so tokens can be dragged again. */
+  static releaseTool() {
+    this.activateTool(["tokens", "token"], "select");
+    this.activeTool = null;
+    document.querySelectorAll("#mgk-left-controls .mgk-floating-btn.active, #mgk-right-controls .mgk-floating-btn.active")
+      .forEach(btn => btn.classList.remove("active"));
+  }
 
   /**
    * Scene control names were renamed between v12 and v13 ("token" -> "tokens"),

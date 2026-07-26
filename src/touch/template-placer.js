@@ -251,18 +251,34 @@ export class TemplatePlacer {
   /*  Commit                                      */
   /* -------------------------------------------- */
 
+  /**
+   * Always run cancel(), even when the create fails. Leaving this method early
+   * used to strand `mobileModeSuspendGestures` in the suspended state, which
+   * killed token dragging until the page was reloaded.
+   */
   static async confirm() {
     if (!this.preview) return this.cancel();
-    const data = this.preview.document.toObject();
-    this.destroyPreview();
-    await canvas.scene.createEmbeddedDocuments("MeasuredTemplate", [data]);
-    this.cancel();
+    try {
+      const data = this.preview.document.toObject();
+      this.destroyPreview();
+      await canvas.scene.createEmbeddedDocuments("MeasuredTemplate", [data]);
+    } catch (err) {
+      console.error("Mobile Mode MGK | Could not place template", err);
+      ui.notifications?.error(t("Templates.PlaceFailed", "Could not place the template."));
+    } finally {
+      this.cancel();
+    }
   }
 
   static async clearOwnTemplates() {
-    const mine = canvas.scene.templates.filter(tpl => tpl.author?.id === game.user.id || tpl.user === game.user.id);
-    if (!mine.length) return ui.notifications?.info(t("Templates.NoneToRemove", "You have no templates here."));
-    await canvas.scene.deleteEmbeddedDocuments("MeasuredTemplate", mine.map(tpl => tpl.id));
+    try {
+      const mine = canvas.scene.templates.filter(tpl => tpl.author?.id === game.user.id || tpl.user === game.user.id);
+      if (!mine.length) return ui.notifications?.info(t("Templates.NoneToRemove", "You have no templates here."));
+      await canvas.scene.deleteEmbeddedDocuments("MeasuredTemplate", mine.map(tpl => tpl.id));
+    } catch (err) {
+      console.error("Mobile Mode MGK | Could not remove templates", err);
+      ui.notifications?.error(t("Templates.RemoveFailed", "Could not remove the templates."));
+    }
   }
 
   /* -------------------------------------------- */
