@@ -58,10 +58,23 @@ npm run check     # lint, smoke tests, build
 
 ### Releasing
 
-Bump `version` in `module.json`, commit, and push to `master`. The release
-workflow reads that field, publishes `v<version>` with `module.json` and
-`module.zip` attached, and players get the update in Foundry. A version that
-already has a release is skipped, so ordinary pushes are safe.
+Push to `master`. That is the whole process.
+
+The workflow publishes `v<version>` from `module.json` with `module.json` and
+`module.zip` attached, and players see the update in Foundry. If that version
+has already been released it raises the patch number until it finds a free one
+and commits the new number back to `master`, so nothing has to be prepared by
+hand.
+
+Two details worth knowing:
+
+- Only changes under `src/`, `lang/`, `module.json` or `LICENSE` publish. Edits
+  to the README or the workflow do not push a new version to every player.
+- Set the version in `module.json` yourself when you want a minor or major
+  release; the workflow only ever raises the patch number on its own.
+
+Pushing a `v*` tag, or running the workflow manually with a version, both still
+work.
 
 The module API is exposed at `game.modules.get("mobile-mode-mgk").api`.
 
