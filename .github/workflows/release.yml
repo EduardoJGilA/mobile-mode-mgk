@@ -1,19 +1,20 @@
 name: Release Module
 
-# Pushing a `v*` tag is enough — the release is created from it. Publishing a
-# release by hand in the GitHub UI also works, and so does running this
-# workflow manually with an explicit version.
+# Releasing is driven by the version field in module.json.
+#
+# Bump it, commit, push to master, and this publishes the release. Pushing a
+# `v*` tag by hand still works, and so does running the workflow manually with
+# an explicit version. Whichever route is taken, a version that already has a
+# release is skipped rather than failing.
 on:
   push:
-    tags:
-      - 'v*'
-  release:
-    types: [published]
+    branches: [master]
+    tags: ['v*']
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release, without the leading v (e.g. 1.0.0)'
-        required: true
+        description: 'Version to release, without the leading v (e.g. 1.1.0). Leave blank to use module.json.'
+        required: false
 
 permissions:
   contents: write
@@ -25,43 +26,68 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Resolve Version
+        run: |
+          set -euo pipefail
+          INPUT="${{ github.event.inputs.version }}"
+
+          if [ -n "$INPUT" ]; then
+            VERSION="$INPUT"
+          elif [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/}"
+            VERSION="${VERSION#v}"
+          else
+            # Plain push to master: the manifest is the source of truth.
+            VERSION="$(node -p "require('./module.json').version")"
+          fi
+
+          if [ -z "$VERSION" ]; then
+            echo "Could not determine a version to release." >&2
+            exit 1
+          fi
+
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "TAG=v$VERSION" >> "$GITHUB_ENV"
+          echo "Resolved version $VERSION"
+
+      - name: Skip Versions Already Released
+        id: guard
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "released=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::$TAG is already released. Bump the version in module.json to publish a new one."
+          else
+            echo "released=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::$TAG is new, building the release."
+          fi
+
       - name: Setup Node.js
+        if: steps.guard.outputs.released == 'false'
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
 
       - name: Install Dependencies
+        if: steps.guard.outputs.released == 'false'
         run: npm ci
 
       - name: Lint
+        if: steps.guard.outputs.released == 'false'
         run: npm run lint
 
       - name: Smoke Tests
+        if: steps.guard.outputs.released == 'false'
         run: npm test
 
       - name: Build JS & CSS
+        if: steps.guard.outputs.released == 'false'
         run: npm run build
 
-      - name: Extract Version
-        run: |
-          set -euo pipefail
-          if [ -n "${{ github.event.inputs.version }}" ]; then
-            VERSION="${{ github.event.inputs.version }}"
-          else
-            # Works for both refs/tags/v1.2.3 and refs/tags/1.2.3
-            VERSION="${GITHUB_REF#refs/tags/}"
-            VERSION="${VERSION#v}"
-          fi
-          if [ -z "$VERSION" ] || [ "$VERSION" = "$GITHUB_REF" ]; then
-            echo "Could not determine a version from ref '$GITHUB_REF'." >&2
-            exit 1
-          fi
-          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "TAG=v$VERSION" >> "$GITHUB_ENV"
-          echo "Releasing version $VERSION"
-
       - name: Update module.json Version & Manifest URLs
+        if: steps.guard.outputs.released == 'false'
         run: |
           node -e '
             const fs = require("fs");
@@ -77,12 +103,13 @@ jobs:
           '
 
       - name: Create Zip Artifact
+        if: steps.guard.outputs.released == 'false'
         run: zip -r module.zip module.json README.md LICENSE dist/ lang/
 
       - name: Upload Release Assets
+        if: steps.guard.outputs.released == 'false'
         uses: softprops/action-gh-release@v2
         with:
-          # Needed when the tag push (not a published release) starts this run.
           tag_name: ${{ env.TAG }}
           name: ${{ env.TAG }}
           generate_release_notes: true

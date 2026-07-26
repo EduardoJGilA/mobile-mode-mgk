@@ -53,7 +53,15 @@ https://raw.githubusercontent.com/EduardoJGilA/mobile-mode-mgk/master/module.jso
 ```bash
 npm install
 npm run build     # outputs dist/mobile-mode-mgk.js and .css
+npm run check     # lint, smoke tests, build
 ```
+
+### Releasing
+
+Bump `version` in `module.json`, commit, and push to `master`. The release
+workflow reads that field, publishes `v<version>` with `module.json` and
+`module.zip` attached, and players get the update in Foundry. A version that
+already has a release is skipped, so ordinary pushes are safe.
 
 The module API is exposed at `game.modules.get("mobile-mode-mgk").api`.
 
