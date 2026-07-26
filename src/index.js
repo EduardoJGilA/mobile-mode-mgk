@@ -3,6 +3,7 @@ import { MODULE_ID } from './core/utils.js';
 import { DeviceDetector } from './core/device-detector.js';
 import { SocketUtil } from './core/socket-util.js';
 import { registerSettings } from './core/settings.js';
+import { NotificationFilter } from './core/notification-filter.js';
 import { TouchGestureHandler } from './touch/gesture-handler.js';
 import { WindowScaler } from './touch/window-scaler.js';
 import { QuickControls } from './ui/quick-controls.js';
@@ -47,6 +48,7 @@ Hooks.once("ready", () => {
   if (!DeviceDetector.isMobileMode()) return;
 
   api.active = true;
+  NotificationFilter.init();
   document.body.classList.add("mobile-mode-mgk");
   if (game.settings.get(MODULE_ID, "hideNativeUI")) document.body.classList.add("mgk-hide-native");
   if (DeviceDetector.isIOS()) document.body.classList.add("mgk-ios");

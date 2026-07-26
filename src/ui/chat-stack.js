@@ -72,11 +72,14 @@ export class ChatStack {
       <div class="mgk-drawer-grab"></div>
       <div class="mgk-stack-card" id="mgk-stack-card"></div>
       <div class="mgk-stack-pager" id="mgk-stack-pager">
+        <!-- Close sits on the left: the right edge is where the floating dice
+             and chat buttons overlap, which made it untappable. -->
+        <button type="button" class="mgk-stack-close" data-close="1"
+                aria-label="${esc(t("Sheets.Close", "Close"))}"><i class="fas fa-times"></i></button>
         <button type="button" data-step="-1" aria-label="${esc(t("Chat.Older", "Older"))}"><i class="fas fa-chevron-up"></i></button>
         <button type="button" id="mgk-stack-count" class="mgk-stack-count"
                 aria-label="${esc(t("Chat.Jump", "Jump to a message"))}">1 / 1</button>
         <button type="button" data-step="1" aria-label="${esc(t("Chat.Newer", "Newer"))}"><i class="fas fa-chevron-down"></i></button>
-        <button type="button" data-close="1" aria-label="${esc(t("Sheets.Close", "Close"))}"><i class="fas fa-times"></i></button>
       </div>
       <div class="mgk-stack-scrub" id="mgk-stack-scrub" hidden>
         <input type="range" id="mgk-stack-range" min="1" max="1" step="1" value="1"

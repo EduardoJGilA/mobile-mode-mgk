@@ -1,5 +1,6 @@
 import { SocketUtil } from '../core/socket-util.js';
 import { TemplatePlacer } from './template-placer.js';
+import { restoreSelect } from '../core/scene-tools.js';
 import { t } from '../core/utils.js';
 
 const TAP_SLOP = 12;          // px of travel still considered a tap
@@ -110,7 +111,10 @@ export class TouchGestureHandler {
         this.draggedToken = null;
       }, LONG_PRESS_MS);
 
-      if (token?.isOwner) {
+      // A token only moves once it is selected. Dragging any token under the
+      // finger meant a player standing on their own token could not pan the
+      // map at all, so selection is the deliberate step that arms movement.
+      if (token?.isOwner && token.controlled) {
         this.mode = "token";
         this.draggedToken = token;
         const world = this.toWorld(touch.clientX, touch.clientY);
@@ -262,6 +266,7 @@ export class TouchGestureHandler {
     this.lastTapTime = now;
     this.tapTimeout = setTimeout(() => {
       if (!token) return;
+      this.ensureTokenLayer();
       if (token.controlled) {
         // Already selected -> toggle targeting for *this* user only.
         const isMine = token.targeted.has(game.user);
@@ -295,6 +300,21 @@ export class TouchGestureHandler {
 
   toWorld(clientX, clientY) {
     return canvas.canvasCoordinatesFromClient({ x: clientX, y: clientY });
+  }
+
+  /**
+   * A token cannot be selected while the canvas is on another layer, and with
+   * the native scene controls hidden the player has no way to switch back. Any
+   * tool that strands the canvas elsewhere is corrected here, on the next tap.
+   *
+   * The template placer is left alone because it owns the templates layer on
+   * purpose. The ruler needs no exception: it is a token-layer tool, so the
+   * layer is already correct while it is in use.
+   */
+  ensureTokenLayer() {
+    if (TemplatePlacer.active) return;
+    if (canvas?.tokens?.active) return;
+    restoreSelect();
   }
 
   getTokenAtPosition(clientX, clientY) {

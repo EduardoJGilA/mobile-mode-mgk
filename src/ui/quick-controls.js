@@ -1,5 +1,6 @@
 import { esc, t } from '../core/utils.js';
 import { TemplatePlacer } from '../touch/template-placer.js';
+import { activateTool, restoreSelect, toolUnavailable, TOKEN_CONTROLS } from '../core/scene-tools.js';
 
 /**
  * Floating control stacks.
@@ -109,7 +110,7 @@ export class QuickControls {
     // Only one map tool at a time, or they fight over single-finger input.
     TemplatePlacer.cancel();
 
-    if (this.activateTool(["tokens", "token"], tool)) {
+    if (this.activateTool(TOKEN_CONTROLS, tool)) {
       this.activeTool = tool;
       button?.classList.add("active");
     }
@@ -117,43 +118,16 @@ export class QuickControls {
 
   /** Return to the select tool so tokens can be dragged again. */
   static releaseTool() {
-    this.activateTool(["tokens", "token"], "select");
+    restoreSelect();
     this.activeTool = null;
     document.querySelectorAll("#mgk-left-controls .mgk-floating-btn.active, #mgk-right-controls .mgk-floating-btn.active")
       .forEach(btn => btn.classList.remove("active"));
   }
 
-  /**
-   * Scene control names were renamed between v12 and v13 ("token" -> "tokens"),
-   * so try each candidate and fall back to activating the layer directly.
-   */
   static activateTool(controls, tool) {
-    const candidates = Array.isArray(controls) ? controls : [controls];
-
-    for (const control of candidates) {
-      try {
-        if (!ui.controls?.controls?.[control] && !ui.controls?.control) continue;
-        ui.controls.activate({ control, tool });
-        return true;
-      } catch (err) {
-        // Try the next candidate name.
-      }
-    }
-
-    for (const control of candidates) {
-      try {
-        if (canvas[control]?.activate) {
-          canvas[control].activate();
-          return true;
-        }
-      } catch (err) {
-        // Nothing else to try for this name.
-      }
-    }
-
-    console.warn("Mobile Mode MGK | Could not activate tool", candidates, tool);
-    ui.notifications?.warn(t("QuickControls.ToolUnavailable", "That tool is not available in this Foundry version."));
-    return false;
+    const ok = activateTool(controls, tool);
+    if (!ok) toolUnavailable();
+    return ok;
   }
 
   static _volumeBefore = {};

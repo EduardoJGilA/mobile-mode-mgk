@@ -1,4 +1,5 @@
 import { esc, t } from '../core/utils.js';
+import { restoreSelect } from '../core/scene-tools.js';
 
 const SHAPES = [
   { id: "circle", icon: "fa-circle", defaults: { distance: 10 } },
@@ -52,6 +53,11 @@ export class TemplatePlacer {
     this.toolbar = null;
     this.unbindCanvas();
     this.origin = null;
+
+    // start() moved the canvas onto the templates layer. Leaving it there is
+    // what stranded the player: tokens stop responding and tapping the button
+    // again cannot fix it, because the tool was never the problem.
+    if (wasActive) restoreSelect();
 
     // Placing a template closes the tool by itself, so the button that opened
     // it has to be told; otherwise it stays lit and the next tap re-opens it.
