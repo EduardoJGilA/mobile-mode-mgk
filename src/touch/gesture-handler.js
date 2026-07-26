@@ -115,7 +115,7 @@ export class TouchGestureHandler {
 
       const isOwned = token && (token.isOwner || token.document?.isOwner || token.actor?.isOwner || token.canUserModify?.(game.user, "update"));
       if (isOwned) {
-        if (!token.controlled) token.control({ releaseOthers: true });
+        this.ensureTokenLayer();
         this.mode = "token";
         this.draggedToken = token;
         const world = this.toWorld(touch.clientX, touch.clientY);
@@ -231,6 +231,7 @@ export class TouchGestureHandler {
   }
 
   async commitTokenDrag(token) {
+    if (token && !token.controlled) token.control({ releaseOthers: true });
     const { w, h } = TouchGestureHandler.sizeOf(token);
     const center = {
       x: token.position.x + w / 2,
