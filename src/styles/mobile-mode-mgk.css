@@ -1473,95 +1473,105 @@ body.mgk-sheet-only #canvas { display: none !important; }
 }
 
 /* --------------------------------------------------------------------------
-   Token HUD Controls (Rotation & Flip)
+   Token HUD Directional Controls (TouchVTT style 8-arrow ring)
    -------------------------------------------------------------------------- */
 
-.mgk-hud-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 6px;
+#token-hud .mgk-hud-dir-ring {
+  pointer-events: none;
 }
 
-.mgk-hud-btn {
-  width: 38px;
-  height: 38px;
-  background: var(--mgk-slate-hi);
-  border: 1px solid var(--mgk-edge);
-  color: var(--mgk-bone);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.95rem;
-  cursor: pointer;
-  clip-path: var(--mgk-chamfer-sm);
-  box-shadow: var(--mgk-shadow);
-  transition: border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
-}
-
-.mgk-hud-btn:active {
-  background: var(--mgk-ink-hi);
-  transform: scale(0.92);
-}
-
-.mgk-hud-btn.active {
-  border-color: var(--mgk-brass);
-  color: var(--mgk-brass);
-}
-
-/* --------------------------------------------------------------------------
-   Ruler Touch HUD (Waypoints & Walk)
-   -------------------------------------------------------------------------- */
-
-.mgk-ruler-hud {
-  position: fixed;
-  bottom: calc(90px + var(--mgk-safe-bottom));
-  left: 50%;
-  transform: translateX(-50%) translateY(100px);
-  z-index: 960;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 14px;
-  background: linear-gradient(158deg, var(--mgk-slate-hi), var(--mgk-ink));
-  box-shadow: var(--mgk-shadow), inset 0 1px 0 var(--mgk-edge-soft);
-  border: 1px solid var(--mgk-edge);
-  opacity: 0;
-  visibility: hidden;
-  transition: transform 0.2s var(--mgk-ease), opacity 0.2s var(--mgk-ease), visibility 0.2s linear;
-}
-
-.mgk-ruler-hud.open {
-  transform: translateX(-50%) translateY(0);
-  opacity: 1;
-  visibility: visible;
-}
-
-.mgk-ruler-btn {
-  width: 44px;
-  height: 44px;
-  background: var(--mgk-slate);
-  border: 1px solid var(--mgk-edge);
-  color: var(--mgk-bone);
+.mgk-hud-dir-btn {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  background: rgba(30, 34, 42, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  color: #f0f0f0;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.1rem;
   cursor: pointer;
-  clip-path: var(--mgk-chamfer-sm);
-  box-shadow: var(--mgk-shadow);
-  transition: border-color 0.15s ease, color 0.15s ease;
+  pointer-events: auto;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+  z-index: 10;
+}
+
+.mgk-dir-sym {
+  font-weight: bold;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.mgk-hud-dir-btn:active {
+  background: rgba(0, 0, 0, 0.95);
+  transform: scale(0.92);
+}
+
+.mgk-hud-dir-btn.active {
+  border-color: #ffc107;
+  color: #ffc107;
+  background: rgba(40, 35, 20, 0.95);
+}
+
+/* Position ring around token HUD */
+.mgk-dir-n  { top: -45px; left: 50%; transform: translateX(-50%); }
+.mgk-dir-s  { bottom: -45px; left: 50%; transform: translateX(-50%); }
+.mgk-dir-w  { left: -45px; top: 50%; transform: translateY(-50%); }
+.mgk-dir-e  { right: -45px; top: 50%; transform: translateY(-50%); }
+
+.mgk-dir-nw { top: -45px; left: -45px; }
+.mgk-dir-ne { top: -45px; right: -45px; }
+.mgk-dir-sw { bottom: -45px; left: -45px; }
+.mgk-dir-se { bottom: -45px; right: -45px; }
+
+/* --------------------------------------------------------------------------
+   Ruler Touch HUD (TouchVTT style vertical floating stack)
+   -------------------------------------------------------------------------- */
+
+.mgk-ruler-hud {
+  position: fixed;
+  z-index: 960;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 6px;
+  background: rgba(20, 24, 30, 0.88);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: auto;
+  transition: opacity 0.15s ease, visibility 0.15s linear;
+}
+
+.mgk-ruler-hud.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.mgk-ruler-btn {
+  width: 40px;
+  height: 40px;
+  background: rgba(40, 46, 56, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: background 0.15s ease, transform 0.1s ease;
 }
 
 .mgk-ruler-walk {
-  background: linear-gradient(158deg, var(--mgk-slate-hi), var(--mgk-brass-dim));
-  border-color: var(--mgk-brass);
-  color: var(--mgk-brass);
-}
-
-.mgk-ruler-clear {
-  border-color: var(--mgk-oxide);
-  color: var(--mgk-oxide);
+  color: #ffc107;
+  border-color: rgba(255, 193, 7, 0.5);
 }
 
 .mgk-ruler-btn:active { transform: scale(0.92); }

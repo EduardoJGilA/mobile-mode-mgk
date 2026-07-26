@@ -1,78 +1,70 @@
-import { esc, t } from '../core/utils.js';
-
 /**
- * Token HUD Touch Controls.
+ * Token HUD Directional Controls (TouchVTT style).
  *
- * Adds touch-friendly token rotation (↺ ↻ 45°) and flipping (Horizontal / Vertical mirror)
- * directly into the Foundry Token HUD when long-pressing or right-clicking a token.
+ * Surrounds the token HUD with 8 directional arrows (N, NE, E, SE, S, SW, W, NW)
+ * for effortless 360° token facing rotation on touch screens.
  */
 export class TokenHudControls {
   static init() {
-    Hooks.on("renderTokenHUD", (hud, html, data) => this.enhanceHUD(hud, html, data));
+    Hooks.on("renderTokenHUD", (hud, html) => this.enhanceHUD(hud, html));
   }
 
-  static enhanceHUD(hud, html, data) {
+  static enhanceHUD(hud, html) {
     const el = html instanceof HTMLElement ? html : html?.[0];
     if (!el) return;
 
     const token = hud.object;
     if (!token?.isOwner) return;
 
-    if (el.querySelector(".mgk-hud-controls")) return;
+    if (el.querySelector(".mgk-hud-dir-ring")) return;
 
-    const controls = document.createElement("div");
-    controls.className = "mgk-hud-controls";
-    controls.innerHTML = `
-      <button type="button" class="mgk-hud-btn" data-action="rotate-left" title="${esc(t("HUD.RotateLeft", "Rotate Left 45°"))}" aria-label="${esc(t("HUD.RotateLeft", "Rotate Left 45°"))}">
-        <i class="fas fa-undo"></i>
-      </button>
-      <button type="button" class="mgk-hud-btn${token.document.mirrorX ? " active" : ""}" data-action="flip-x" title="${esc(t("HUD.FlipX", "Flip Horizontal"))}" aria-label="${esc(t("HUD.FlipX", "Flip Horizontal"))}">
-        <i class="fas fa-arrows-left-right"></i>
-      </button>
-      <button type="button" class="mgk-hud-btn${token.document.mirrorY ? " active" : ""}" data-action="flip-y" title="${esc(t("HUD.FlipY", "Flip Vertical"))}" aria-label="${esc(t("HUD.FlipY", "Flip Vertical"))}">
-        <i class="fas fa-arrows-up-down"></i>
-      </button>
-      <button type="button" class="mgk-hud-btn" data-action="rotate-right" title="${esc(t("HUD.RotateRight", "Rotate Right 45°"))}" aria-label="${esc(t("HUD.RotateRight", "Rotate Right 45°"))}">
-        <i class="fas fa-redo"></i>
-      </button>
-    `;
+    const directions = [
+      { angle: 0,   class: "mgk-dir-n",  icon: "fa-chevron-up", label: "North (0°)" },
+      { angle: 45,  class: "mgk-dir-ne", symbol: "↗", label: "North-East (45°)" },
+      { angle: 90,  class: "mgk-dir-e",  icon: "fa-chevron-right", label: "East (90°)" },
+      { angle: 135, class: "mgk-dir-se", symbol: "↘", label: "South-East (135°)" },
+      { angle: 180, class: "mgk-dir-s",  icon: "fa-chevron-down", label: "South (180°)" },
+      { angle: 225, class: "mgk-dir-sw", symbol: "↙", label: "South-West (225°)" },
+      { angle: 270, class: "mgk-dir-w",  icon: "fa-chevron-left", label: "West (270°)" },
+      { angle: 315, class: "mgk-dir-nw", symbol: "↖", label: "North-West (315°)" }
+    ];
 
-    const colRight = el.querySelector(".col.right") ?? el;
-    colRight.appendChild(controls);
+    const ring = document.createElement("div");
+    ring.className = "mgk-hud-dir-ring";
 
-    controls.addEventListener("click", async (ev) => {
-      const btn = ev.target.closest("[data-action]");
+    const currentRot = token.document.rotation ?? 0;
+
+    for (const dir of directions) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      const isActive = Math.abs(currentRot - dir.angle) < 22.5 || (dir.angle === 0 && currentRot >= 337.5);
+      btn.className = `mgk-hud-dir-btn ${dir.class}${isActive ? " active" : ""}`;
+      btn.dataset.angle = String(dir.angle);
+      btn.setAttribute("title", dir.label);
+      btn.setAttribute("aria-label", dir.label);
+
+      if (dir.symbol) {
+        btn.innerHTML = `<span class="mgk-dir-sym">${dir.symbol}</span>`;
+      } else {
+        btn.innerHTML = `<i class="fas ${dir.icon}"></i>`;
+      }
+
+      ring.appendChild(btn);
+    }
+
+    el.appendChild(ring);
+
+    ring.addEventListener("click", async (ev) => {
+      const btn = ev.target.closest("[data-angle]");
       if (!btn) return;
       ev.preventDefault();
       ev.stopPropagation();
 
-      const action = btn.dataset.action;
-      const currentRot = token.document.rotation ?? 0;
+      const angle = Number(btn.dataset.angle);
+      await token.document.update({ rotation: angle });
 
-      switch (action) {
-        case "rotate-left": {
-          const newRot = (currentRot - 45 + 360) % 360;
-          await token.document.update({ rotation: newRot });
-          break;
-        }
-        case "rotate-right": {
-          const newRot = (currentRot + 45) % 360;
-          await token.document.update({ rotation: newRot });
-          break;
-        }
-        case "flip-x": {
-          const mirrorX = !token.document.mirrorX;
-          await token.document.update({ mirrorX });
-          btn.classList.toggle("active", mirrorX);
-          break;
-        }
-        case "flip-y": {
-          const mirrorY = !token.document.mirrorY;
-          await token.document.update({ mirrorY });
-          btn.classList.toggle("active", mirrorY);
-          break;
-        }
-      }
+      ring.querySelectorAll(".mgk-hud-dir-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
     });
   }
 }

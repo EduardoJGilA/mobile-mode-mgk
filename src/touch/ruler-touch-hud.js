@@ -3,12 +3,12 @@ import { SocketUtil } from '../core/socket-util.js';
 import { restoreSelect } from '../core/scene-tools.js';
 
 /**
- * Touch HUD for the Ruler Tool.
+ * Touch HUD for the Ruler Tool (TouchVTT style).
  *
- * Appears when measuring distance on touch screens. Allows players to:
- * - 🚩 Add a waypoint along the measured path (no keyboard Space bar needed)
- * - 👣 Move their controlled token to the destination
- * - ❌ Clear the ruler
+ * Floats right next to the ruler endpoint while measuring distance on touch screens.
+ * Provides 2 instant touch buttons:
+ * - 👣 Move Token: Walks the controlled token along the measured path
+ * - 🚩 Add Waypoint: Adds a waypoint node to measure around corners without a keyboard
  */
 export class RulerTouchHud {
   static el = null;
@@ -18,10 +18,12 @@ export class RulerTouchHud {
     Hooks.on("drawRuler", () => this.update());
     Hooks.on("destroyRuler", () => this.hide());
 
-    // Listen to mouse/touch move on canvas while measuring
     window.addEventListener("pointermove", () => {
       if (this.isRulerMeasuring()) this.update();
     });
+    window.addEventListener("touchmove", () => {
+      if (this.isRulerMeasuring()) this.update();
+    }, { passive: true });
   }
 
   static getRuler() {
@@ -38,7 +40,31 @@ export class RulerTouchHud {
     if (!ruler || (!ruler.active && (!ruler.waypoints || !ruler.waypoints.length))) {
       return this.hide();
     }
+
+    const dest = ruler.destination ?? ruler.waypoints?.[ruler.waypoints.length - 1];
+    if (!dest) return this.hide();
+
+    const client = typeof canvas.clientCoordinatesFromCanvas === "function"
+      ? canvas.clientCoordinatesFromCanvas(dest)
+      : this.worldToClientFallback(dest);
+
+    if (!this.el) this.el = this.create();
+
+    // Position floating buttons near the tip of the measurement line
+    this.el.style.left = `${Math.min(window.innerWidth - 60, Math.max(10, client.x + 20))}px`;
+    this.el.style.top = `${Math.min(window.innerHeight - 100, Math.max(10, client.y - 80))}px`;
+
     this.show();
+  }
+
+  static worldToClientFallback(point) {
+    const view = canvas.app?.canvas || canvas.app?.view || document.getElementById("board");
+    const rect = view?.getBoundingClientRect() ?? { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+    const scale = canvas.stage?.scale?.x ?? 1;
+    return {
+      x: rect.left + (point.x - (canvas.stage?.pivot?.x ?? 0)) * scale + rect.width / 2,
+      y: rect.top + (point.y - (canvas.stage?.pivot?.y ?? 0)) * scale + rect.height / 2
+    };
   }
 
   static show() {
@@ -57,14 +83,11 @@ export class RulerTouchHud {
     el.id = "mgk-ruler-hud";
     el.className = "mgk-ruler-hud";
     el.innerHTML = `
-      <button type="button" class="mgk-ruler-btn" data-action="waypoint" title="${esc(t("Ruler.Waypoint", "Add Waypoint"))}" aria-label="${esc(t("Ruler.Waypoint", "Add Waypoint"))}">
-        <i class="fas fa-flag"></i>
-      </button>
       <button type="button" class="mgk-ruler-btn mgk-ruler-walk" data-action="walk" title="${esc(t("Ruler.Walk", "Move Token Here"))}" aria-label="${esc(t("Ruler.Walk", "Move Token Here"))}">
         <i class="fas fa-shoe-prints"></i>
       </button>
-      <button type="button" class="mgk-ruler-btn mgk-ruler-clear" data-action="clear" title="${esc(t("Sheets.Close", "Clear"))}" aria-label="${esc(t("Sheets.Close", "Clear"))}">
-        <i class="fas fa-times"></i>
+      <button type="button" class="mgk-ruler-btn" data-action="waypoint" title="${esc(t("Ruler.Waypoint", "Add Waypoint"))}" aria-label="${esc(t("Ruler.Waypoint", "Add Waypoint"))}">
+        <i class="fas fa-flag"></i>
       </button>
     `;
 
@@ -78,7 +101,7 @@ export class RulerTouchHud {
 
       const action = btn.dataset.action;
       const ruler = this.getRuler();
-      const token = canvas.tokens.controlled[0];
+      const token = canvas.tokens.controlled[0] ?? game.user.character?.getActiveTokens()[0];
 
       switch (action) {
         case "waypoint": {
@@ -110,12 +133,6 @@ export class RulerTouchHud {
               }
             }
           }
-          if (ruler?.clear) ruler.clear();
-          this.hide();
-          restoreSelect();
-          break;
-        }
-        case "clear": {
           if (ruler?.clear) ruler.clear();
           this.hide();
           restoreSelect();
