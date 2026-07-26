@@ -1,5 +1,7 @@
+import { ChatStack } from '../ui/chat-stack.js';
+
 /**
- * Fits Foundry application windows (journals, handouts, item sheets, settings)
+ * Fits Foundry application windows (journals, handouts, item sheets, settings, dialogs)
  * inside a phone viewport.
  *
  * Foundry v13 renders most windows through ApplicationV2, but plenty of
@@ -7,7 +9,7 @@
  */
 export class WindowScaler {
   static init() {
-    for (const hook of ["renderApplicationV2", "renderApplication", "renderDocumentSheet"]) {
+    for (const hook of ["renderApplicationV2", "renderApplication", "renderDocumentSheet", "renderDialog", "renderRollResolver"]) {
       Hooks.on(hook, (app, html) => this.scaleWindow(app, html));
     }
   }
@@ -22,6 +24,17 @@ export class WindowScaler {
     const element = this.resolveElement(app, html);
     if (!element) return;
     if (element.closest("#mgk-sheet-drawer, .mgk-drawer-panel")) return;
+
+    // Elevate dialogs/applications so they float above mobile sheet drawers (z-index 1000)
+    const currentZ = parseInt(window.getComputedStyle(element).zIndex) || 100;
+    if (currentZ < 1500) {
+      element.style.zIndex = "1500";
+    }
+
+    // Auto-hide floating chat card when a roll dialog or window pops up
+    if (ChatStack.visible) {
+      ChatStack.hide();
+    }
 
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
@@ -38,6 +51,12 @@ export class WindowScaler {
       const overflows = windowWidth > screenWidth * 0.96 || windowHeight > screenHeight * 0.9;
       if (!overflows) {
         element.style.transform = "";
+        // Center unscaled dialogs on mobile viewport
+        if (!element.dataset.mgkPositioned) {
+          element.style.left = `${Math.max(0, (screenWidth - windowWidth) / 2)}px`;
+          element.style.top = `${Math.max(0, (screenHeight - windowHeight) / 3)}px`;
+          element.dataset.mgkPositioned = "1";
+        }
         return;
       }
 
@@ -51,7 +70,8 @@ export class WindowScaler {
       element.style.transform = `scale(${scale})`;
       // Re-centre after scaling, since transform does not affect layout size.
       element.style.left = `${Math.max(0, (screenWidth - windowWidth * scale) / 2)}px`;
-      element.style.top = `${Math.max(0, (screenHeight - windowHeight * scale) / 2)}px`;
+      element.style.top = `${Math.max(0, (screenHeight - windowHeight * scale) / 3)}px`;
+      element.dataset.mgkPositioned = "1";
     });
   }
 }

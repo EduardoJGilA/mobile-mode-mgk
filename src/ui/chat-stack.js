@@ -23,6 +23,9 @@ export class ChatStack {
       this.renderCard();
     });
     Hooks.on("mobileModeCloseStack", () => this.hide());
+    Hooks.on("mobileModeToggleChat", () => {
+      if (this.visible) this.hide();
+    });
   }
 
   static get visible() {
@@ -50,12 +53,26 @@ export class ChatStack {
     this.renderCard();
     this.el.classList.add("open");
     document.body.classList.add("mgk-stack-open");
+
+    // Close when tapping outside the card (e.g. on the map or background)
+    setTimeout(() => {
+      document.addEventListener("pointerdown", this._onOutsideClick, { capture: true });
+    }, 50);
   }
 
   static hide() {
     this.el?.classList.remove("open");
     document.body.classList.remove("mgk-stack-open");
+    document.removeEventListener("pointerdown", this._onOutsideClick, { capture: true });
   }
+
+  static _onOutsideClick = (ev) => {
+    if (!this.visible) return;
+    const target = ev.target;
+    if (this.el?.contains(target)) return;
+    if (target.closest("#mgk-right-controls, #mgk-left-controls, #mgk-sheet-drawer")) return;
+    this.hide();
+  };
 
   static toggle() {
     if (this.visible) return this.hide();
@@ -69,11 +86,13 @@ export class ChatStack {
     el.id = "mgk-chat-stack";
     el.className = "mgk-chat-stack";
     el.innerHTML = `
-      <div class="mgk-drawer-grab"></div>
+      <div class="mgk-stack-header">
+        <div class="mgk-drawer-grab"></div>
+        <button type="button" class="mgk-stack-top-close" data-close="1"
+                aria-label="${esc(t("Sheets.Close", "Close"))}"><i class="fas fa-times"></i></button>
+      </div>
       <div class="mgk-stack-card" id="mgk-stack-card"></div>
       <div class="mgk-stack-pager" id="mgk-stack-pager">
-        <!-- Close sits on the left: the right edge is where the floating dice
-             and chat buttons overlap, which made it untappable. -->
         <button type="button" class="mgk-stack-close" data-close="1"
                 aria-label="${esc(t("Sheets.Close", "Close"))}"><i class="fas fa-times"></i></button>
         <button type="button" data-step="-1" aria-label="${esc(t("Chat.Older", "Older"))}"><i class="fas fa-chevron-up"></i></button>
@@ -95,7 +114,19 @@ export class ChatStack {
     el.querySelectorAll("[data-step]").forEach(btn => {
       btn.addEventListener("click", () => this.step(Number(btn.dataset.step)));
     });
-    el.querySelector("[data-close]").addEventListener("click", () => this.hide());
+    el.querySelectorAll("[data-close]").forEach(btn => {
+      btn.addEventListener("click", () => this.hide());
+    });
+
+    // Auto-hide stack when user taps any roll button or action inside the chat card
+    el.querySelector("#mgk-stack-card").addEventListener("click", (ev) => {
+      const trigger = ev.target.closest("button, [data-action], a.inline-roll, .roll-button");
+      if (trigger) {
+        setTimeout(() => {
+          if (this.visible) this.hide();
+        }, 80);
+      }
+    });
 
     // Tapping the counter turns it into a scrubber, which beats tapping an
     // arrow eighty times to reach an old roll.
@@ -112,15 +143,13 @@ export class ChatStack {
       this.renderCard();
     });
 
-    // Swipe is bound to the grab handle only. Binding it to the whole panel
-    // meant scrolling a long message paged the stack instead, which walked the
-    // reader back to the oldest entry with no way to return.
-    const grab = el.querySelector(".mgk-drawer-grab");
+    // Swipe down from top header or grab handle closes the stack
+    const header = el.querySelector(".mgk-stack-header");
     let startY = 0;
-    grab.addEventListener("touchstart", (ev) => { startY = ev.touches[0]?.clientY ?? 0; }, { passive: true });
-    grab.addEventListener("touchend", (ev) => {
+    header.addEventListener("touchstart", (ev) => { startY = ev.touches[0]?.clientY ?? 0; }, { passive: true });
+    header.addEventListener("touchend", (ev) => {
       const dy = (ev.changedTouches[0]?.clientY ?? 0) - startY;
-      if (Math.abs(dy) < 50) return;
+      if (Math.abs(dy) < 40) return;
       if (dy > 0) return this.hide();
       this.step(1);
     }, { passive: true });

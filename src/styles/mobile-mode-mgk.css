@@ -165,9 +165,18 @@ body.mobile-mode-mgk #notifications {
 
 /* 3D dice must land in front of every overlay this module draws. */
 body.mobile-mode-mgk #dice-box-canvas {
-  z-index: 1200 !important;
+  z-index: 2000 !important;
   pointer-events: none;
 }
+
+/* Foundry dialogs and applications float above mobile sheet drawers and overlays */
+body.mobile-mode-mgk .window-app,
+body.mobile-mode-mgk dialog.application,
+body.mobile-mode-mgk .application,
+body.mobile-mode-mgk .dialog {
+  z-index: 1500;
+}
+
 
 /* --------------------------------------------------------------------------
    Floating controls
@@ -1219,6 +1228,35 @@ body.mgk-placing-template #mgk-right-controls { display: none; }
 
 body.mgk-stack-open #mgk-avatar-carousel { display: none; }
 
+.mgk-stack-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 8px;
+  background: rgba(0, 0, 0, 0.25);
+  border-bottom: 1px solid var(--mgk-edge-soft);
+}
+
+.mgk-stack-header .mgk-drawer-grab {
+  flex: 1;
+  height: 20px;
+  margin: 0;
+}
+
+.mgk-stack-top-close {
+  background: transparent !important;
+  border: none !important;
+  color: var(--mgk-ash) !important;
+  font-size: 1.1rem;
+  padding: 4px 8px;
+  cursor: pointer;
+  box-shadow: none !important;
+}
+
+.mgk-stack-top-close:active {
+  color: var(--mgk-oxide) !important;
+}
+
 .mgk-stack-card {
   flex: 1;
   overflow-y: auto;
@@ -1259,8 +1297,8 @@ body.mgk-stack-open #mgk-avatar-carousel { display: none; }
 .mgk-stack-scrub {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 8px;
   padding: 7px 10px;
   border-top: 1px solid var(--mgk-edge);
   font-size: 0.78rem;
@@ -1286,7 +1324,6 @@ body.mgk-stack-open #mgk-avatar-carousel { display: none; }
 
 /* Close reads as the way out, not as another pager arrow. */
 .mgk-stack-close {
-  margin-right: auto;
   border-color: var(--mgk-oxide) !important;
   color: var(--mgk-oxide) !important;
 }
