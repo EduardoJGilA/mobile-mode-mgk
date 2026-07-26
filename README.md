@@ -33,7 +33,7 @@ Inspired by [`swipe-vtt`](https://github.com/crlngn/swipe-vtt) by Carolingian.
 Use this manifest URL in Foundry VTT:
 
 ```
-https://github.com/EduardoJGilA/mobile-mode-mgk/releases/latest/download/module.json
+https://raw.githubusercontent.com/EduardoJGilA/mobile-mode-mgk/master/module.json
 ```
 
 ## Touch gestures
