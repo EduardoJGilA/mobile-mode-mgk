@@ -46,6 +46,9 @@ export class TouchGestureHandler {
 
   init() {
     if (!canvas?.ready) return;
+    // Every client-to-world conversion is measured against the board element,
+    // so without it pan and pinch silently do nothing.
+    this._view = canvas.app?.canvas ?? canvas.app?.view ?? document.getElementById("board");
     TouchGestureHandler.patchTokenDrag();
     this.destroy();
 
@@ -81,8 +84,21 @@ export class TouchGestureHandler {
         // is only created by _initializeDragLeft. A drag that is cancelled before
         // it ever started - routine on touch, where opening a sheet drawer eats
         // the pointer sequence - leaves it undefined and Object.values() throws.
+        //
+        // Letting it throw is not survivable: MouseInteractionManager#cancel has
+        // no catch, so the exception escapes before it resets the state back to
+        // HOVER. The manager stays in DRAG with stale interaction data and every
+        // later pointerup throws again, which is why this used to repeat forever.
         const data = event?.interactionData;
-        if (data && !data.contexts) data.contexts = {};
+        if (data && !data.contexts) {
+          console.warn(
+            "Mobile Mode MGK | _finalizeDragLeft reached without interactionData.contexts."
+            + " The drag was cancelled before _initializeDragLeft ran - look for an earlier"
+            + " error in this console, that one is the real trigger.",
+            { token: this?.id, event }
+          );
+          data.contexts = {};
+        }
         try {
           return origFinalize.call(this, event, ...args);
         } catch (err) {
@@ -194,7 +210,7 @@ export class TouchGestureHandler {
       const scaleRatio = dist / this.startDist;
       const newScale = this.clamp(this.startScale * scaleRatio, MIN_SCALE, MAX_SCALE);
 
-      const rect = (canvas.app?.canvas || canvas.app?.view || document.getElementById("board"))?.getBoundingClientRect() ?? { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+      const rect = this.viewRect;
       const dx = (mid.x - rect.left) - rect.width / 2;
       const dy = (mid.y - rect.top) - rect.height / 2;
 
@@ -339,9 +355,9 @@ export class TouchGestureHandler {
    * Passing the unchanged scale makes this a pure pan.
    */
   anchorTo(from, to, newScale) {
-    if (!from || !to || !this._view) return;
+    if (!from || !to) return;
     const world = this.toWorld(from.x, from.y);
-    const rect = this._view.getBoundingClientRect();
+    const rect = this.viewRect;
     const dx = (to.x - rect.left) - rect.width / 2;
     const dy = (to.y - rect.top) - rect.height / 2;
     canvas.pan({
@@ -349,6 +365,12 @@ export class TouchGestureHandler {
       y: world.y - dy / newScale,
       scale: newScale
     });
+  }
+
+  /** Bounds of the board element, falling back to the viewport if it is gone. */
+  get viewRect() {
+    return this._view?.getBoundingClientRect()
+      ?? { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
   }
 
   toWorld(clientX, clientY) {

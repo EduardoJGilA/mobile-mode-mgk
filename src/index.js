@@ -46,8 +46,17 @@ Hooks.once("init", () => {
 Hooks.once("ready", () => {
   SocketUtil.init();
 
-  if (!game.settings.get(MODULE_ID, "enableMobile")) return;
-  if (!DeviceDetector.isMobileMode()) return;
+  if (!game.settings.get(MODULE_ID, "enableMobile")) {
+    console.log("Mobile Mode MGK | Inactive: the 'enableMobile' setting is off.");
+    return;
+  }
+  if (!DeviceDetector.isMobileMode()) {
+    console.log(
+      `Mobile Mode MGK | Inactive: not detected as a mobile device (touch=${DeviceDetector.isTouchDevice()}, `
+      + `shortestSide=${DeviceDetector.shortestSide}px). Set "forceMobile" to "on" to override.`
+    );
+    return;
+  }
 
   api.active = true;
   NotificationFilter.init();
@@ -74,11 +83,19 @@ Hooks.once("ready", () => {
   // Sheet-only mode runs without a canvas, so the canvas features stay off.
   SheetOnly.init();
   if (!SheetOnly.enabled) CanvasFreeze.init();
+
+  // On a fresh page load Foundry awaits the canvas *before* it fires "ready",
+  // so the canvasReady hook below already ran while api.active was still false.
+  // Without this the gesture handler would only exist after a scene change.
+  if (canvas?.ready) initCanvasFeatures();
 });
 
 Hooks.on("canvasReady", () => {
   if (!api.active) return;
+  initCanvasFeatures();
+});
 
+function initCanvasFeatures() {
   TouchGestureHandler.patchTokenDrag();
 
   // Rebuild the handler each scene, but tear the old one down first so its
@@ -88,7 +105,7 @@ Hooks.on("canvasReady", () => {
   api.gestureHandler.init();
 
   MemoryDiagnostics.checkVramAlert();
-});
+}
 
 Hooks.on("canvasTearDown", () => {
   TemplatePlacer.cancel();
