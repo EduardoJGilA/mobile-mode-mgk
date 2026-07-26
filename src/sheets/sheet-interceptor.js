@@ -12,7 +12,7 @@ export class SheetInterceptor {
   static bypass = false;
 
   static init() {
-    for (const hook of ["renderActorSheet", "renderActorSheetV2", "renderApplicationV2"]) {
+    for (const hook of ["renderActorSheet", "renderActorSheetV2", "renderApplicationV2", "renderApplication"]) {
       Hooks.on(hook, (app) => this.onRender(app));
     }
   }
@@ -20,14 +20,12 @@ export class SheetInterceptor {
   static onRender(app) {
     if (this.bypass) return;
 
-    const actor = app?.actor ?? app?.document;
+    const actor = app?.actor ?? (app?.document?.documentName === "Actor" ? app.document : null);
     if (!actor || actor.documentName !== "Actor") return;
-    if (!actor.isOwner) return;
+    if (typeof actor.isOwner === "boolean" && !actor.isOwner) return;
 
-    // Closing inside the render hook can race the application's own setup, so
-    // let the current frame finish first.
     Promise.resolve().then(() => {
-      app.close({ animate: false });
+      app.close?.({ animate: false });
       Hooks.callAll("mobileModeOpenSheet", actor);
     });
   }

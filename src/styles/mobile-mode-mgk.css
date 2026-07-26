@@ -314,7 +314,7 @@ body.mobile-mode-mgk #mgk-avatar-carousel::-webkit-scrollbar { display: none; }
   transition: transform 0.3s var(--mgk-ease);
   color: var(--mgk-bone);
   overflow: hidden;
-  padding-bottom: var(--mgk-safe-bottom);
+  padding-bottom: 0;
   padding-top: var(--mgk-safe-top);
 }
 
@@ -360,23 +360,22 @@ body.mgk-tablet .mgk-sheet-drawer.open { transform: translateX(0); }
 .mgk-header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-width: 0;
+  gap: 10px;
 }
 
 .mgk-header-avatar {
-  width: 46px;
-  height: 46px;
+  width: 42px;
+  height: 42px;
   object-fit: cover;
-  flex: none;
   clip-path: var(--mgk-chamfer-sm);
-  border-radius: 0;
+  border: 1px solid var(--mgk-edge);
 }
 
 .mgk-header-name {
-  font-size: 1.06rem;
+  font-family: var(--mgk-font-title);
+  font-size: 1.15rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  color: var(--mgk-bone);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -437,6 +436,7 @@ body.mgk-tablet .mgk-sheet-drawer.open { transform: translateX(0); }
   display: flex;
   gap: 2px;
   padding: 0 8px;
+  padding-bottom: max(14px, calc(10px + var(--mgk-safe-bottom)));
   background: var(--mgk-ink);
   border-top: 1px solid var(--mgk-edge);
   overflow-x: auto;
@@ -1423,3 +1423,51 @@ body.mgk-sheet-only #canvas { display: none !important; }
 }
 
 #mgk-right-controls .mgk-floating-btn { position: relative; }
+
+/* --------------------------------------------------------------------------
+   Chat card dark theme overrides
+   -------------------------------------------------------------------------- */
+
+.mgk-stack-card .chat-message,
+#mgk-chat-content .chat-message {
+  background: transparent !important;
+  color: var(--mgk-bone) !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.mgk-stack-card .dnd5e2.chat-card,
+#mgk-chat-content .dnd5e2.chat-card,
+.mgk-stack-card .card-header,
+#mgk-chat-content .card-header,
+.mgk-stack-card .chat-card,
+#mgk-chat-content .chat-card {
+  background: transparent !important;
+  color: var(--mgk-bone) !important;
+  border-color: var(--mgk-edge) !important;
+}
+
+.mgk-stack-card .card-header h3,
+#mgk-chat-content .card-header h3,
+.mgk-stack-card .chat-card .item-name,
+#mgk-chat-content .chat-card .item-name {
+  color: var(--mgk-brass) !important;
+}
+
+.mgk-stack-card .dice-roll,
+#mgk-chat-content .dice-roll,
+.mgk-stack-card .dice-formula,
+#mgk-chat-content .dice-formula,
+.mgk-stack-card .dice-total,
+#mgk-chat-content .dice-total {
+  background: rgba(0, 0, 0, 0.3) !important;
+  color: var(--mgk-brass) !important;
+  border-color: var(--mgk-edge) !important;
+}
+
+.mgk-stack-card fieldset,
+#mgk-chat-content fieldset {
+  border-color: var(--mgk-edge) !important;
+  background: rgba(0, 0, 0, 0.15) !important;
+  color: var(--mgk-bone) !important;
+}
