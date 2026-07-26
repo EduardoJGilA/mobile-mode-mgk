@@ -1508,3 +1508,60 @@ body.mgk-sheet-only #canvas { display: none !important; }
   border-color: var(--mgk-brass);
   color: var(--mgk-brass);
 }
+
+/* --------------------------------------------------------------------------
+   Ruler Touch HUD (Waypoints & Walk)
+   -------------------------------------------------------------------------- */
+
+.mgk-ruler-hud {
+  position: fixed;
+  bottom: calc(90px + var(--mgk-safe-bottom));
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  z-index: 960;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: linear-gradient(158deg, var(--mgk-slate-hi), var(--mgk-ink));
+  box-shadow: var(--mgk-shadow), inset 0 1px 0 var(--mgk-edge-soft);
+  border: 1px solid var(--mgk-edge);
+  opacity: 0;
+  visibility: hidden;
+  transition: transform 0.2s var(--mgk-ease), opacity 0.2s var(--mgk-ease), visibility 0.2s linear;
+}
+
+.mgk-ruler-hud.open {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  visibility: visible;
+}
+
+.mgk-ruler-btn {
+  width: 44px;
+  height: 44px;
+  background: var(--mgk-slate);
+  border: 1px solid var(--mgk-edge);
+  color: var(--mgk-bone);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  cursor: pointer;
+  clip-path: var(--mgk-chamfer-sm);
+  box-shadow: var(--mgk-shadow);
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.mgk-ruler-walk {
+  background: linear-gradient(158deg, var(--mgk-slate-hi), var(--mgk-brass-dim));
+  border-color: var(--mgk-brass);
+  color: var(--mgk-brass);
+}
+
+.mgk-ruler-clear {
+  border-color: var(--mgk-oxide);
+  color: var(--mgk-oxide);
+}
+
+.mgk-ruler-btn:active { transform: scale(0.92); }

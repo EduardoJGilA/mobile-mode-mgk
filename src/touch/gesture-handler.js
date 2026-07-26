@@ -104,9 +104,14 @@ export class TouchGestureHandler {
       this.longPressTimer = setTimeout(() => {
         if (this.moved) return;
         const hit = this.getTokenAtPosition(touch.clientX, touch.clientY);
-        if (!hit) return;
-        hit.control({ releaseOthers: true });
-        canvas.hud?.token?.bind(hit);
+        if (hit) {
+          hit.control({ releaseOthers: true });
+          canvas.hud?.token?.bind(hit);
+        } else {
+          // Long-press on empty map space sends a ping to all players
+          const world = this.toWorld(touch.clientX, touch.clientY);
+          canvas.ping?.(world);
+        }
         this.mode = null;
         this.draggedToken = null;
       }, LONG_PRESS_MS);

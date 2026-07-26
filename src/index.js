@@ -14,6 +14,7 @@ import { MacroHotbar } from './ui/macro-hotbar.js';
 import { SheetManager } from './sheets/sheet-manager.js';
 import { SheetInterceptor } from './sheets/sheet-interceptor.js';
 import { TokenHudControls } from './touch/token-hud-controls.js';
+import { RulerTouchHud } from './touch/ruler-touch-hud.js';
 import { TemplatePlacer } from './touch/template-placer.js';
 import { SheetOnly } from './standalone/sheet-only.js';
 import { CanvasFreeze } from './performance/canvas-freeze.js';
@@ -68,6 +69,7 @@ Hooks.once("ready", () => {
   SheetInterceptor.init();
   WindowScaler.init();
   TokenHudControls.init();
+  RulerTouchHud.init();
 
   // Sheet-only mode runs without a canvas, so the canvas features stay off.
   SheetOnly.init();
