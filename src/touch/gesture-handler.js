@@ -29,14 +29,16 @@ export class TouchGestureHandler {
     this.draggedToken = null;
     this.grabOffset = { x: 0, y: 0 };
     this.touchStartPos = { x: 0, y: 0 };
+
+    this.startDist = 0;
+    this.startScale = 1;
+    this.startWorldMid = null;
     this.prevMid = null;
-    this.prevDist = 0;
     this.moved = false;
 
     // Set while another tool (e.g. the template placer) owns single-finger input.
     this.suspended = false;
 
-    this._view = null;
     this._onTouchStart = this.onTouchStart.bind(this);
     this._onTouchMove = this.onTouchMove.bind(this);
     this._onTouchEnd = this.onTouchEnd.bind(this);
@@ -79,7 +81,7 @@ export class TouchGestureHandler {
   /* -------------------------------------------- */
 
   onTouchStart(e) {
-    if (e.target.closest("#mgk-sheet-drawer, #mgk-chat-drawer, .window-app, .dialog, input, textarea, select")) return;
+    if (e.target.closest("#mgk-sheet-drawer, #mgk-chat-drawer, .window-app, .dialog, input, textarea, select, button")) return;
 
     // Self-heal: if something suspended gestures and then failed to resume
     // them, the player would be stuck unable to move tokens until a reload.
@@ -111,10 +113,9 @@ export class TouchGestureHandler {
         this.draggedToken = null;
       }, LONG_PRESS_MS);
 
-      // A token only moves once it is selected. Dragging any token under the
-      // finger meant a player standing on their own token could not pan the
-      // map at all, so selection is the deliberate step that arms movement.
-      if (token?.isOwner && token.controlled) {
+      const isOwned = token && (token.isOwner || token.document?.isOwner || token.actor?.isOwner || token.canUserModify?.(game.user, "update"));
+      if (isOwned) {
+        if (!token.controlled) token.control({ releaseOthers: true });
         this.mode = "token";
         this.draggedToken = token;
         const world = this.toWorld(touch.clientX, touch.clientY);
@@ -127,34 +128,47 @@ export class TouchGestureHandler {
       clearTimeout(this.longPressTimer);
       this.cancelTokenDrag();
       this.mode = "pinch";
-      this.prevMid = this.getMidpoint(e.touches[0], e.touches[1]);
-      this.prevDist = this.getDistance(e.touches[0], e.touches[1]);
+      const mid = this.getMidpoint(e.touches[0], e.touches[1]);
+      this.prevMid = mid;
+      this.startDist = this.getDistance(e.touches[0], e.touches[1]);
+      this.startScale = canvas.stage.scale.x;
+      this.startWorldMid = this.toWorld(mid.x, mid.y);
     }
   }
 
   onTouchMove(e) {
-    if (e.target.closest("#mgk-sheet-drawer, #mgk-chat-drawer, .window-app, .dialog, input, textarea, select")) return;
+    if (e.target.closest("#mgk-sheet-drawer, #mgk-chat-drawer, .window-app, .dialog, input, textarea, select, button")) return;
 
     if (e.touches.length >= 2) {
       e.preventDefault();
       clearTimeout(this.longPressTimer);
-      if (this.mode !== "pinch") {
-        this.mode = "pinch";
-        this.prevMid = this.getMidpoint(e.touches[0], e.touches[1]);
-        this.prevDist = this.getDistance(e.touches[0], e.touches[1]);
-        return;
-      }
 
       const mid = this.getMidpoint(e.touches[0], e.touches[1]);
       const dist = this.getDistance(e.touches[0], e.touches[1]);
-      const factor = this.prevDist > 0 ? dist / this.prevDist : 1;
-      const newScale = this.clamp(canvas.stage.scale.x * factor, MIN_SCALE, MAX_SCALE);
 
-      // Keep the world point that was under the previous midpoint under the new one.
-      this.anchorTo(this.prevMid, mid, newScale);
+      if (this.mode !== "pinch" || !this.startDist) {
+        this.mode = "pinch";
+        this.prevMid = mid;
+        this.startDist = dist;
+        this.startScale = canvas.stage.scale.x;
+        this.startWorldMid = this.toWorld(mid.x, mid.y);
+        return;
+      }
+
+      const scaleRatio = dist / this.startDist;
+      const newScale = this.clamp(this.startScale * scaleRatio, MIN_SCALE, MAX_SCALE);
+
+      const rect = (canvas.app?.canvas || canvas.app?.view || document.getElementById("board"))?.getBoundingClientRect() ?? { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+      const dx = (mid.x - rect.left) - rect.width / 2;
+      const dy = (mid.y - rect.top) - rect.height / 2;
+
+      canvas.pan({
+        x: this.startWorldMid.x - dx / newScale,
+        y: this.startWorldMid.y - dy / newScale,
+        scale: newScale
+      });
 
       this.prevMid = mid;
-      this.prevDist = dist;
       return;
     }
 

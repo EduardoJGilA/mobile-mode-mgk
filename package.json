@@ -1,6 +1,6 @@
 {
   "name": "mobile-mode-mgk",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "Mobile-friendly interface for Foundry VTT with touch controls, optimized character sheets, and performance enhancements.",
   "type": "module",
   "scripts": {
