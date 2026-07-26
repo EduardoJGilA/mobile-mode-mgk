@@ -15,6 +15,25 @@ export class RulerTouchHud {
   static active = false;
 
   static init() {
+    // Patch Ruler prototype if present so every measurement frame updates our HUD
+    const RulerClass = globalThis.Ruler;
+    if (typeof RulerClass !== "undefined" && RulerClass.prototype) {
+      const origMeasure = RulerClass.prototype.measure;
+      const self = this;
+      RulerClass.prototype.measure = function(...args) {
+        const res = origMeasure.apply(this, args);
+        self.update();
+        return res;
+      };
+
+      const origClear = RulerClass.prototype.clear;
+      RulerClass.prototype.clear = function(...args) {
+        const res = origClear.apply(this, args);
+        self.hide();
+        return res;
+      };
+    }
+
     Hooks.on("drawRuler", () => this.update());
     Hooks.on("destroyRuler", () => this.hide());
 

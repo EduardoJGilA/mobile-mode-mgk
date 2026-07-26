@@ -14,7 +14,10 @@ export class TokenHudControls {
     if (!el) return;
 
     const token = hud.object;
-    if (!token?.isOwner) return;
+    if (!token) return;
+
+    const isOwner = token.isOwner || token.document?.isOwner || token.actor?.isOwner || token.canUserModify?.(game.user, "update");
+    if (!isOwner) return;
 
     if (el.querySelector(".mgk-hud-dir-ring")) return;
 
@@ -32,7 +35,7 @@ export class TokenHudControls {
     const ring = document.createElement("div");
     ring.className = "mgk-hud-dir-ring";
 
-    const currentRot = token.document.rotation ?? 0;
+    const currentRot = token.document?.rotation ?? token.rotation ?? 0;
 
     for (const dir of directions) {
       const btn = document.createElement("button");

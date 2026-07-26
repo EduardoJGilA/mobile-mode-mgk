@@ -1,11 +1,9 @@
 /**
- * Redirects the desktop character sheet to the mobile drawer.
+ * Redirects desktop actor sheets to the mobile drawer.
  *
- * Double-tapping a token makes Foundry open its own sheet as well as firing our
- * gesture, so the player got the cramped desktop window on top of the drawer.
- * Rather than trying to suppress every path that can open a sheet (token
- * double-click, Token HUD, carousel, macros, chat portraits), this catches the
- * render itself and swaps in the drawer.
+ * Catches render hooks for ActorSheet windows only, preventing unwanted native
+ * desktop actor windows from covering the mobile layout while allowing item sheets,
+ * roll dialogs, and HUD applications to function normally.
  */
 export class SheetInterceptor {
   /** Set while deliberately opening the real sheet, e.g. "Open full sheet". */
@@ -18,7 +16,15 @@ export class SheetInterceptor {
   }
 
   static onRender(app) {
-    if (this.bypass) return;
+    if (this.bypass || !app) return;
+
+    // Must strictly be an ActorSheet instance, not an ItemSheet, RollDialog, or HUD
+    const name = app?.constructor?.name?.toLowerCase() ?? "";
+    const isActorSheet = app instanceof (globalThis.ActorSheet ?? class {})
+      || name.includes("actorsheet")
+      || (app?.document?.documentName === "Actor" && (name.includes("sheet") || app?.options?.classes?.includes("sheet")));
+
+    if (!isActorSheet) return;
 
     const actor = app?.actor ?? (app?.document?.documentName === "Actor" ? app.document : null);
     if (!actor || actor.documentName !== "Actor") return;
@@ -35,9 +41,8 @@ export class SheetInterceptor {
     if (!actor) return;
     this.bypass = true;
     try {
-      await actor.sheet.render(true);
+      await actor.sheet?.render(true);
     } finally {
-      // Give the render hooks a frame to run before arming again.
       setTimeout(() => { this.bypass = false; }, 1000);
     }
   }
