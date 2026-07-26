@@ -1,0 +1,47 @@
+{
+  "id": "mobile-mode-mgk",
+  "title": "Mobile Mode MGK",
+  "description": "Mobile-friendly interface for Foundry VTT with touch controls, optimized drawer character sheets, chat drawer, and performance tools.",
+  "version": "1.0.0",
+  "authors": [
+    {
+      "name": "MGK"
+    }
+  ],
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13.351",
+    "maximum": "14.999"
+  },
+  "relationships": {
+    "requires": [
+      {
+        "id": "socketlib",
+        "type": "module",
+        "compatibility": {
+          "minimum": "1.0.0"
+        }
+      }
+    ]
+  },
+  "esmodules": [
+    "dist/mobile-mode-mgk.js"
+  ],
+  "styles": [
+    "dist/mobile-mode-mgk.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "es",
+      "name": "Español",
+      "path": "lang/es.json"
+    }
+  ],
+  "flags": {},
+  "socket": true
+}
