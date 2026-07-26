@@ -46,6 +46,7 @@ export class TouchGestureHandler {
 
   init() {
     if (!canvas?.ready) return;
+    TouchGestureHandler.patchTokenDrag();
     this.destroy();
 
     window.addEventListener("touchstart", this._onTouchStart, { passive: false });
@@ -55,6 +56,24 @@ export class TouchGestureHandler {
 
     this._onSuspend = (state) => { this.suspended = !!state; };
     Hooks.on("mobileModeSuspendGestures", this._onSuspend);
+  }
+
+  static patchTokenDrag() {
+    const TokenClass = globalThis.Token;
+    if (!TokenClass?.prototype || TokenClass.prototype._mgkPatched) return;
+    TokenClass.prototype._mgkPatched = true;
+
+    const origFinalize = TokenClass.prototype._finalizeDragLeft;
+    if (typeof origFinalize === "function") {
+      TokenClass.prototype._finalizeDragLeft = function(...args) {
+        if (!this._dragData) this._dragData = {};
+        try {
+          return origFinalize.apply(this, args);
+        } catch (err) {
+          console.warn("Mobile Mode MGK | Safe-guarded Token._finalizeDragLeft", err);
+        }
+      };
+    }
   }
 
   /** Remove every listener this handler installed. Safe to call twice. */
@@ -115,6 +134,7 @@ export class TouchGestureHandler {
 
       const isOwned = token && (token.isOwner || token.document?.isOwner || token.actor?.isOwner || token.canUserModify?.(game.user, "update"));
       if (isOwned) {
+        token._dragData = token._dragData || {};
         this.ensureTokenLayer();
         this.mode = "token";
         this.draggedToken = token;
