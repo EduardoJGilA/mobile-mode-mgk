@@ -61,21 +61,30 @@ export class TouchGestureHandler {
   static patchTokenDrag() {
     const prototypes = new Set([
       globalThis.Token?.prototype,
+      foundry?.canvas?.placeables?.Token?.prototype,
       globalThis.Token5e?.prototype,
       CONFIG?.Token?.objectClass?.prototype,
       canvas?.tokens?.placeables?.[0]?.constructor?.prototype
     ].filter(Boolean));
 
     for (const proto of prototypes) {
-      if (proto._mgkPatched) continue;
+      // Own-property check only: a subclass inherits the flag from its patched
+      // parent, and skipping it would leave its own override unwrapped.
+      if (Object.hasOwn(proto, "_mgkPatched")) continue;
       proto._mgkPatched = true;
 
       const origFinalize = proto._finalizeDragLeft;
-      proto._finalizeDragLeft = function(...args) {
-        if (!this._dragData) this._dragData = {};
-        if (!this._dragRuler) this._dragRuler = {};
+      if (typeof origFinalize !== "function") continue;
+
+      proto._finalizeDragLeft = function(event, ...args) {
+        // Token#_finalizeDragLeft iterates event.interactionData.contexts, which
+        // is only created by _initializeDragLeft. A drag that is cancelled before
+        // it ever started - routine on touch, where opening a sheet drawer eats
+        // the pointer sequence - leaves it undefined and Object.values() throws.
+        const data = event?.interactionData;
+        if (data && !data.contexts) data.contexts = {};
         try {
-          return origFinalize ? origFinalize.apply(this, args) : undefined;
+          return origFinalize.call(this, event, ...args);
         } catch (err) {
           console.warn("Mobile Mode MGK | Safe-guarded _finalizeDragLeft", err);
         }
