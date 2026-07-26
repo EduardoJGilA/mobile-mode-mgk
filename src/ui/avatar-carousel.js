@@ -11,20 +11,24 @@ export class AvatarCarousel {
   static init() {
     this.render();
 
-    // Keep the strip in sync with the world.
-    for (const hook of ["createActor", "deleteActor", "updateUser"]) {
+    // Keep the strip in sync with the world and active scene tokens.
+    for (const hook of ["createActor", "deleteActor", "updateUser", "createToken", "deleteToken", "canvasReady"]) {
       Hooks.on(hook, () => this.render());
     }
     Hooks.on("updateActor", (actor) => this.updateActor(actor));
     Hooks.on("updateCombat", () => this.render());
     Hooks.on("deleteCombat", () => this.render());
     Hooks.on("controlToken", (token, controlled) => {
-      if (controlled) this.setActive(token.actor?.id);
+      if (controlled && token?.actor) this.setActive(token.actor.id);
     });
   }
 
   static getActors() {
-    return game.actors.filter(a => a.isOwner && a.hasPlayerOwner && a.type !== "vehicle");
+    if (!game.actors) return [];
+    const sceneActorIds = new Set(canvas.tokens?.placeables.filter(t => t.actor?.isOwner).map(t => t.actor.id) ?? []);
+    if (game.user.character?.id) sceneActorIds.add(game.user.character.id);
+
+    return game.actors.filter(a => a.isOwner && a.hasPlayerOwner && a.type !== "vehicle" && sceneActorIds.has(a.id));
   }
 
   static render() {
