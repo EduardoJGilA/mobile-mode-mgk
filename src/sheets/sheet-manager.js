@@ -2,6 +2,7 @@ import { DnD5eAdapter } from './adapters/dnd5e-adapter.js';
 import { PF2eAdapter } from './adapters/pf2e-adapter.js';
 import { AgnosticAdapter } from './adapters/agnostic-adapter.js';
 import { HpWidget } from '../ui/hp-widget.js';
+import { SheetInterceptor } from './sheet-interceptor.js';
 import { esc, t } from '../core/utils.js';
 
 const SWIPE_CLOSE_PX = 90;
@@ -219,7 +220,7 @@ export class SheetManager {
 
       case "open-native":
         this.close();
-        actor.sheet?.render(true);
+        await SheetInterceptor.openNative(actor);
         break;
 
       default:
