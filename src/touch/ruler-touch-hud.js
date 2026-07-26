@@ -46,7 +46,11 @@ export class RulerTouchHud {
   }
 
   static getRuler() {
-    return canvas.controls?.ruler ?? canvas.grid?.ruler ?? game.user?.ruler ?? null;
+    return canvas.controls?.rulers?.get(game.user.id)
+      ?? canvas.controls?.ruler
+      ?? canvas.grid?.ruler
+      ?? game.user?.ruler
+      ?? null;
   }
 
   static isRulerMeasuring() {

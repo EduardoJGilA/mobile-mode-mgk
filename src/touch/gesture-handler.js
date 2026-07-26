@@ -155,6 +155,7 @@ export class TouchGestureHandler {
         if (hit) {
           hit.control({ releaseOthers: true });
           canvas.hud?.token?.bind(hit);
+          canvas.hud?.token?.render(true);
         } else {
           // Long-press on empty map space sends a ping to all players
           const world = this.toWorld(touch.clientX, touch.clientY);
