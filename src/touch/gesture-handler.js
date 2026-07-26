@@ -44,16 +44,12 @@ export class TouchGestureHandler {
 
   init() {
     if (!canvas?.ready) return;
-    const view = canvas.app?.view || document.getElementById("board");
-    if (!view) return;
-
     this.destroy();
-    this._view = view;
 
-    view.addEventListener("touchstart", this._onTouchStart, { passive: false });
-    view.addEventListener("touchmove", this._onTouchMove, { passive: false });
-    view.addEventListener("touchend", this._onTouchEnd, { passive: false });
-    view.addEventListener("touchcancel", this._onTouchEnd, { passive: false });
+    window.addEventListener("touchstart", this._onTouchStart, { passive: false });
+    window.addEventListener("touchmove", this._onTouchMove, { passive: false });
+    window.addEventListener("touchend", this._onTouchEnd, { passive: false });
+    window.addEventListener("touchcancel", this._onTouchEnd, { passive: false });
 
     this._onSuspend = (state) => { this.suspended = !!state; };
     Hooks.on("mobileModeSuspendGestures", this._onSuspend);
@@ -64,13 +60,10 @@ export class TouchGestureHandler {
     clearTimeout(this.longPressTimer);
     clearTimeout(this.tapTimeout);
 
-    if (this._view) {
-      this._view.removeEventListener("touchstart", this._onTouchStart);
-      this._view.removeEventListener("touchmove", this._onTouchMove);
-      this._view.removeEventListener("touchend", this._onTouchEnd);
-      this._view.removeEventListener("touchcancel", this._onTouchEnd);
-      this._view = null;
-    }
+    window.removeEventListener("touchstart", this._onTouchStart);
+    window.removeEventListener("touchmove", this._onTouchMove);
+    window.removeEventListener("touchend", this._onTouchEnd);
+    window.removeEventListener("touchcancel", this._onTouchEnd);
 
     if (this._onSuspend) {
       Hooks.off("mobileModeSuspendGestures", this._onSuspend);
@@ -86,6 +79,8 @@ export class TouchGestureHandler {
   /* -------------------------------------------- */
 
   onTouchStart(e) {
+    if (e.target.closest("#mgk-sheet-drawer, #mgk-chat-drawer, .window-app, .dialog, input, textarea, select")) return;
+
     // Self-heal: if something suspended gestures and then failed to resume
     // them, the player would be stuck unable to move tokens until a reload.
     // The template placer is the only legitimate reason to stay suspended.
@@ -128,7 +123,7 @@ export class TouchGestureHandler {
         this.mode = "pan";
         this.prevMid = { x: touch.clientX, y: touch.clientY };
       }
-    } else if (e.touches.length === 2) {
+    } else if (e.touches.length >= 2) {
       clearTimeout(this.longPressTimer);
       this.cancelTokenDrag();
       this.mode = "pinch";
@@ -138,7 +133,9 @@ export class TouchGestureHandler {
   }
 
   onTouchMove(e) {
-    if (e.touches.length === 2) {
+    if (e.target.closest("#mgk-sheet-drawer, #mgk-chat-drawer, .window-app, .dialog, input, textarea, select")) return;
+
+    if (e.touches.length >= 2) {
       e.preventDefault();
       clearTimeout(this.longPressTimer);
       if (this.mode !== "pinch") {

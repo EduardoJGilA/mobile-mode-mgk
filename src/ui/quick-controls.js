@@ -31,10 +31,10 @@ export class QuickControls {
     container.innerHTML = `
       <div class="mgk-tool-stack" id="mgk-tool-stack">
         ${this.button("mgk-btn-logout", "fa-right-from-bracket", "QuickControls.Logout", "Log Out")}
-        ${this.button("mgk-btn-av", "fa-video", "QuickControls.Camera", "Camera & Audio")}
+        ${this.button("mgk-btn-recenter", "fa-crosshairs", "QuickControls.Recenter", "Center on Token")}
         ${this.button("mgk-btn-journal", "fa-book-open", "QuickControls.Journals", "Journals & Notes")}
         ${this.button("mgk-btn-volume", "fa-volume-high", "QuickControls.Volume", "Volume Control")}
-        ${this.button("mgk-btn-clear-targets", "fa-crosshairs", "QuickControls.ClearTargets", "Clear Targets")}
+        ${this.button("mgk-btn-clear-targets", "fa-ban", "QuickControls.ClearTargets", "Clear Targets")}
         ${this.button("mgk-btn-template", "fa-draw-polygon", "QuickControls.Templates", "Place Template")}
         ${this.button("mgk-btn-ruler", "fa-ruler", "QuickControls.Ruler", "Measure Distance")}
       </div>
@@ -73,7 +73,24 @@ export class QuickControls {
     });
     on("mgk-btn-journal", () => ui.journal?.render(true));
     on("mgk-btn-volume", () => this.toggleMute(container.querySelector("#mgk-btn-volume")));
-    on("mgk-btn-av", () => this.toggleAV(container.querySelector("#mgk-btn-av")));
+    on("mgk-btn-recenter", () => {
+      const token = canvas.tokens?.controlled[0]
+        ?? game.user.character?.getActiveTokens()[0]
+        ?? canvas.tokens?.placeables.find(t => t.isOwner);
+
+      if (token) {
+        token.control({ releaseOthers: true });
+        const w = token.w ?? (token.document.width * canvas.grid.sizeX);
+        const h = token.h ?? (token.document.height * canvas.grid.sizeY);
+        canvas.animatePan({
+          x: token.position.x + w / 2,
+          y: token.position.y + h / 2,
+          scale: canvas.stage.scale.x
+        });
+      } else {
+        ui.notifications?.warn(t("QuickControls.NoTokenFound", "No token found on this scene."));
+      }
+    });
     on("mgk-btn-logout", async () => {
       const ok = await this.confirm(t("QuickControls.LogoutConfirm", "Log out of this world?"));
       if (ok) game.logOut();
