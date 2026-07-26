@@ -1,37 +1,57 @@
 /**
- * Window Scaler & Touch Header Dragging for Application Windows
+ * Fits Foundry application windows (journals, handouts, item sheets, settings)
+ * inside a phone viewport.
+ *
+ * Foundry v13 renders most windows through ApplicationV2, but plenty of
+ * modules and systems still use the v1 Application, so both hooks are wired.
  */
 export class WindowScaler {
   static init() {
-    Hooks.on("renderApplication", (app, html) => {
-      this.scaleWindow(app, html);
-    });
+    for (const hook of ["renderApplicationV2", "renderApplication", "renderDocumentSheet"]) {
+      Hooks.on(hook, (app, html) => this.scaleWindow(app, html));
+    }
+  }
 
-    Hooks.on("renderDocumentSheet", (app, html) => {
-      this.scaleWindow(app, html);
-    });
+  static resolveElement(app, html) {
+    if (app?.element instanceof HTMLElement) return app.element;
+    if (html instanceof HTMLElement) return html;
+    return html?.[0] ?? null;
   }
 
   static scaleWindow(app, html) {
-    if (window.innerWidth > 1024) return;
-
-    const element = html[0] || html;
-    if (!element || !(element instanceof HTMLElement)) return;
+    const element = this.resolveElement(app, html);
+    if (!element) return;
+    if (element.closest("#mgk-sheet-drawer, .mgk-drawer-panel")) return;
 
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
 
-    const windowWidth = element.offsetWidth || 400;
-    const windowHeight = element.offsetHeight || 500;
+    // Read after layout so offsetWidth is meaningful for freshly rendered apps.
+    requestAnimationFrame(() => {
+      const windowWidth = element.offsetWidth;
+      const windowHeight = element.offsetHeight;
+      if (!windowWidth || !windowHeight) return;
 
-    if (windowWidth > screenWidth * 0.95 || windowHeight > screenHeight * 0.9) {
-      const scaleX = (screenWidth * 0.92) / windowWidth;
-      const scaleY = (screenHeight * 0.85) / windowHeight;
-      const scale = Math.min(scaleX, scaleY, 1.0);
+      element.style.maxWidth = `${screenWidth * 0.96}px`;
+      element.style.maxHeight = `${screenHeight * 0.9}px`;
+
+      const overflows = windowWidth > screenWidth * 0.96 || windowHeight > screenHeight * 0.9;
+      if (!overflows) {
+        element.style.transform = "";
+        return;
+      }
+
+      const scale = Math.min(
+        (screenWidth * 0.96) / windowWidth,
+        (screenHeight * 0.9) / windowHeight,
+        1
+      );
 
       element.style.transformOrigin = "top left";
       element.style.transform = `scale(${scale})`;
-      element.style.maxWidth = `${screenWidth * 0.95}px`;
-    }
+      // Re-centre after scaling, since transform does not affect layout size.
+      element.style.left = `${Math.max(0, (screenWidth - windowWidth * scale) / 2)}px`;
+      element.style.top = `${Math.max(0, (screenHeight - windowHeight * scale) / 2)}px`;
+    });
   }
 }

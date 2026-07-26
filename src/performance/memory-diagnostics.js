@@ -1,48 +1,93 @@
+import { MODULE_ID, t } from '../core/utils.js';
+
+const BYTES_PER_PIXEL = 4;   // RGBA
+const MB = 1024 * 1024;
+
 /**
- * Memory Diagnostics for Texture VRAM Estimation (Foundry V13 & V14)
+ * Texture memory diagnostics.
+ *
+ * For the scene that is actually rendered we measure the real GPU textures the
+ * renderer is holding, which is far more accurate than guessing from document
+ * fields. For any other scene we fall back to an estimate from its dimensions.
  */
 export class MemoryDiagnostics {
-  static estimateSceneMemory(scene) {
-    if (!scene) return 0;
-    let totalBytes = 0;
+  /** Measured VRAM of everything the renderer currently has uploaded, in MB. */
+  static measureLiveTextures() {
+    const managed = canvas?.app?.renderer?.texture?.managedTextures;
+    if (!managed?.length) return null;
 
-    // V14 multi-level support check
-    if (scene.firstLevel) {
-      let level = scene.firstLevel;
-      while (level) {
-        if (level.background?.src) totalBytes += this.estimateImageBytes(level.background);
-        if (level.foreground?.src) totalBytes += this.estimateImageBytes(level.foreground);
-        level = level.next;
-      }
-    } else {
-      // V13 legacy accessors
-      if (scene.background?.src) totalBytes += this.estimateImageBytes(scene.background);
-      if (scene.foreground?.src) totalBytes += this.estimateImageBytes(scene.foreground);
+    let bytes = 0;
+    for (const texture of managed) {
+      const width = texture.realWidth ?? texture.width ?? 0;
+      const height = texture.realHeight ?? texture.height ?? 0;
+      if (!width || !height) continue;
+      // Mipmaps add roughly a third on top of the base level.
+      const mipFactor = texture.mipmap ? 4 / 3 : 1;
+      bytes += width * height * BYTES_PER_PIXEL * mipFactor;
     }
-
-    // Token texture estimations
-    if (scene.tokens) {
-      scene.tokens.forEach(t => {
-        if (t.texture?.src) totalBytes += 512 * 512 * 4; // Average 512px token
-      });
-    }
-
-    return Math.round(totalBytes / (1024 * 1024)); // Return in MB
+    return Math.round(bytes / MB);
   }
 
-  static estimateImageBytes(bg) {
-    const width = bg.width || 4096;
-    const height = bg.height || 4096;
-    return width * height * 4; // 4 bytes per RGBA pixel
+  /** Static estimate for a scene document, used when it is not the active one. */
+  static estimateSceneMemory(scene) {
+    if (!scene) return 0;
+    if (canvas?.ready && canvas.scene?.id === scene.id) {
+      const live = this.measureLiveTextures();
+      if (live !== null) return live;
+    }
+
+    let bytes = 0;
+    for (const level of this.getLevels(scene)) {
+      if (level.background?.src) bytes += this.estimateLayerBytes(scene);
+      if (level.foreground?.src) bytes += this.estimateLayerBytes(scene);
+    }
+
+    // Tokens: assume a 512px square texture each, which is the common case.
+    bytes += (scene.tokens?.size ?? 0) * 512 * 512 * BYTES_PER_PIXEL;
+
+    // Tiles are unbounded in size; use the scene grid footprint as a proxy.
+    for (const tile of scene.tiles ?? []) {
+      bytes += (tile.width || 0) * (tile.height || 0) * BYTES_PER_PIXEL;
+    }
+
+    return Math.round(bytes / MB);
+  }
+
+  /**
+   * V14 splits a scene into levels; V13 keeps a single background/foreground
+   * pair on the scene itself. Only read `levels` if the document actually has
+   * it, so this stays correct on both.
+   */
+  static getLevels(scene) {
+    const levels = scene.levels;
+    if (levels && typeof levels[Symbol.iterator] === "function") return Array.from(levels);
+    return [{ background: scene.background, foreground: { src: scene.foreground } }];
+  }
+
+  /** Background textures are drawn at scene resolution, padding included. */
+  static estimateLayerBytes(scene) {
+    const width = scene.dimensions?.sceneWidth ?? scene.width ?? 4096;
+    const height = scene.dimensions?.sceneHeight ?? scene.height ?? 4096;
+    return width * height * BYTES_PER_PIXEL;
   }
 
   static checkVramAlert() {
     if (!canvas?.scene) return;
     const estimatedMB = this.estimateSceneMemory(canvas.scene);
-    const limit = game.settings.get("mobile-mode-mgk", "vramLimitWarning") || 400;
+    const limit = game.settings.get(MODULE_ID, "vramLimitWarning") || 400;
+    if (estimatedMB <= limit) return;
 
-    if (estimatedMB > limit) {
-      ui.notifications?.warn(`High Texture Memory: ~${estimatedMB}MB VRAM (Limit ${limit}MB). Mobile devices may reload.`);
-    }
+    const template = t("Notifications.HighVram", "High texture memory: ~{mb}MB (limit {limit}MB). Mobile devices may reload.");
+    ui.notifications?.warn(template.replace("{mb}", estimatedMB).replace("{limit}", limit));
+  }
+
+  /** Per-scene report used by the image optimizer dialog. */
+  static report() {
+    return game.scenes.map(scene => ({
+      id: scene.id,
+      name: scene.name,
+      mb: this.estimateSceneMemory(scene),
+      active: scene.id === canvas?.scene?.id
+    })).sort((a, b) => b.mb - a.mb);
   }
 }

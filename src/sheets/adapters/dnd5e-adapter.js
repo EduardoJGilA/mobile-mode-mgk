@@ -1,154 +1,401 @@
+import { esc, t, signed } from '../../core/utils.js';
+import { section, itemRow, statBox, pips, empty } from '../components.js';
+
+const PHYSICAL_TYPES = ["weapon", "equipment", "consumable", "tool", "loot", "container"];
+
 /**
- * DnD5e System Adapter matching 100% Swipe-VTT Sheet Demo Screenshot
+ * D&D 5e adapter. Supports the 4.x and 5.x data models: several fields moved
+ * from plain numbers to objects between those releases, so every read goes
+ * through a defensive helper.
  */
 export class DnD5eAdapter {
+  static tabs = [
+    { id: "Abilities", label: "Abilities" },
+    { id: "Combat", label: "Combat" },
+    { id: "Inventory", label: "Inventory" },
+    { id: "Features", label: "Features" },
+    { id: "Spells", label: "Spells" },
+    { id: "Effects", label: "Effects" },
+    { id: "Other", label: "Other" }
+  ];
+
+  static hpPaths = {
+    value: "system.attributes.hp.value",
+    max: "system.attributes.hp.max",
+    temp: "system.attributes.hp.temp",
+    tempmax: "system.attributes.hp.tempmax"
+  };
+
+  /* -------------------------------------------- */
+  /*  Data                                        */
+  /* -------------------------------------------- */
+
   static getCharacterData(actor) {
     const system = actor.system;
 
-    const hp = system.attributes?.hp || { value: 0, max: 0, temp: 0 };
-    const ac = system.attributes?.ac?.value || 10;
-    const speed = system.attributes?.movement?.walk || 30;
-    const init = system.attributes?.init?.total || 0;
-    const hd = system.attributes?.hd || { value: 1, max: 1 };
+    const classes = (actor.itemTypes?.class ?? []).map(c => `${c.name} ${c.system.levels}`);
+    const species = actor.itemTypes?.race?.[0]?.name
+      ?? actor.itemTypes?.species?.[0]?.name
+      ?? this.plain(system.details?.race);
 
-    let raceName = "Dwarf";
-    if (typeof system.details?.race === 'string') raceName = system.details.race;
-    else if (system.details?.race?.name) raceName = system.details.race.name;
-
-    const className = Object.values(actor.itemTypes?.class || {}).map(c => `${c.name} ${c.system.levels}`).join(" / ") || "Fighter 2";
-
-    const abilities = system.abilities || {};
-    const skills = system.skills || {};
-    const currency = system.currency || { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 };
-
-    const weapons = actor.items.filter(i => i.type === "weapon");
-    const spells = actor.items.filter(i => i.type === "spell");
-    const equipment = actor.items.filter(i => ["equipment", "consumable", "loot", "container"].includes(i.type));
+    const subtitleParts = [classes.join(" / "), species].filter(Boolean);
 
     return {
       actor,
       name: actor.name,
       img: actor.img,
-      raceName,
-      className,
-      hp,
-      ac,
-      speed,
-      init,
-      hd,
-      abilities,
-      skills,
-      currency,
-      weapons,
-      spells,
-      equipment
+      subtitle: subtitleParts.join(" · "),
+      hp: system.attributes?.hp ?? { value: 0, max: 0 },
+      ac: system.attributes?.ac?.value ?? 10,
+      speed: system.attributes?.movement?.walk ?? 0,
+      speedUnits: system.attributes?.movement?.units ?? "ft",
+      init: system.attributes?.init?.total ?? 0,
+      hd: system.attributes?.hd ?? { value: 0, max: 0 },
+      abilities: system.abilities ?? {},
+      skills: system.skills ?? {},
+      currency: system.currency ?? {},
+      encumbrance: system.attributes?.encumbrance ?? null,
+      spellSlots: this.getSpellSlots(system),
+      senses: system.attributes?.senses ?? {},
+      resources: system.resources ?? {},
+      weapons: actor.itemTypes?.weapon ?? [],
+      spells: actor.itemTypes?.spell ?? [],
+      feats: actor.itemTypes?.feat ?? [],
+      gear: actor.items.filter(i => PHYSICAL_TYPES.includes(i.type)),
+      effects: Array.from(actor.effects ?? [])
     };
   }
 
-  static renderCombatTab(data) {
+  /** `race` was a string in older data and a document reference later. */
+  static plain(value) {
+    if (!value) return "";
+    if (typeof value === "string") return value;
+    return value.name ?? "";
+  }
+
+  /** Some numeric fields became `{value}` objects in 5.x. */
+  static num(value, fallback = 0) {
+    if (value === null || value === undefined) return fallback;
+    if (typeof value === "object") return Number(value.value ?? value.total ?? fallback) || fallback;
+    return Number(value) || fallback;
+  }
+
+  static getSpellSlots(system) {
+    const out = [];
+    for (const [key, slot] of Object.entries(system.spells ?? {})) {
+      if (!slot || !slot.max) continue;
+      const levelMatch = key.match(/^spell(\d+)$/);
+      out.push({
+        key,
+        level: levelMatch ? Number(levelMatch[1]) : null,
+        label: levelMatch ? this.levelLabel(Number(levelMatch[1])) : key.titleCase?.() ?? key,
+        value: slot.value ?? 0,
+        max: slot.max ?? 0
+      });
+    }
+    return out;
+  }
+
+  static levelLabel(level) {
+    if (level === 0) return t("Sheets.Cantrip", "Cantrips");
+    return CONFIG.DND5E?.spellLevels?.[level] ?? `Level ${level}`;
+  }
+
+  /** Best-effort attack/damage labels across 4.x and 5.x. */
+  static itemChips(item) {
+    const labels = item.labels ?? {};
+    const toHit = labels.modifier ?? labels.toHit ?? null;
+    const damage = labels.damage ?? (Array.isArray(labels.damages) ? labels.damages[0]?.formula : null);
+    const uses = item.system?.uses;
+    const usesChip = uses?.max ? `${uses.value ?? 0}/${uses.max}` : null;
+    return [toHit, damage, usesChip];
+  }
+
+  /* -------------------------------------------- */
+  /*  Rendering                                   */
+  /* -------------------------------------------- */
+
+  static renderTab(tabId, data) {
+    const fn = this[`render${tabId}`];
+    if (typeof fn !== "function") return empty(t("Sheets.Empty", "Nothing here."));
+    return fn.call(this, data);
+  }
+
+  static renderAbilities(data) {
+    const abilityCards = Object.entries(data.abilities).map(([key, ab]) => {
+      const label = CONFIG.DND5E?.abilities?.[key]?.abbreviation?.toUpperCase() ?? key.toUpperCase();
+      return `
+        <div class="mgk-ability-card">
+          <div class="mgk-ability-label">${esc(label)}</div>
+          <button type="button" class="mgk-ability-score" data-action="roll-ability" data-ability="${esc(key)}">
+            ${esc(this.num(ab.value, 10))}
+          </button>
+          <div class="mgk-ability-mod">${esc(signed(this.num(ab.mod)))}</div>
+          <button type="button" class="mgk-save-mod" data-action="roll-save" data-ability="${esc(key)}">
+            ${esc(t("Sheets.Save", "SAVE"))} ${esc(signed(this.num(ab.save)))}
+          </button>
+        </div>
+      `;
+    }).join("");
+
+    const skillRows = Object.entries(data.skills).map(([key, sk]) => {
+      const label = CONFIG.DND5E?.skills?.[key]?.label ?? key;
+      const abil = (sk.ability ?? "").toUpperCase();
+      const prof = this.num(sk.proficient);
+      const profClass = prof >= 2 ? "expertise" : prof >= 1 ? "proficient" : prof > 0 ? "half" : "";
+      return `
+        <button type="button" class="mgk-skill-row" data-action="roll-skill" data-skill="${esc(key)}">
+          <span class="mgk-prof ${profClass}"></span>
+          <span class="mgk-skill-name">${esc(label)}</span>
+          <span class="mgk-skill-abil">${esc(abil)}</span>
+          <span class="mgk-skill-total">${esc(signed(this.num(sk.total)))}</span>
+        </button>
+      `;
+    }).join("");
+
     return `
-      <div class="mgk-sheet-content">
-        <!-- Left Column: Ability Scores & Skills -->
-        <div class="mgk-col-left">
-          <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; margin-bottom:10px;">
-            <div class="mgk-stat-box">
-              <div class="mgk-ability-label">AC</div>
-              <div class="mgk-ability-score">${data.ac}</div>
-            </div>
-            <div class="mgk-stat-box">
-              <div class="mgk-ability-label">SPEED</div>
-              <div class="mgk-ability-score">${data.speed}</div>
-            </div>
-            <div class="mgk-stat-box">
-              <div class="mgk-ability-label">HIT DICE</div>
-              <div class="mgk-ability-score">${data.hd.value}/${data.hd.max}</div>
-            </div>
-            <div class="mgk-stat-box">
-              <div class="mgk-ability-label">INIT</div>
-              <div class="mgk-ability-score">+${data.init}</div>
-            </div>
-          </div>
-
-          <!-- Ability Grid -->
-          <div class="mgk-ability-grid">
-            ${Object.entries(data.abilities).map(([key, ab]) => `
-              <div class="mgk-ability-card">
-                <div class="mgk-ability-label">${key.toUpperCase()}</div>
-                <div class="mgk-ability-score">${ab.value || 10}</div>
-                <div class="mgk-ability-mod">${ab.mod >= 0 ? '+' : ''}${ab.mod || 0}</div>
-                <div class="mgk-save-mod">SAVE ${ab.save >= 0 ? '+' : ''}${ab.save || 0}</div>
-              </div>
-            `).join('')}
-          </div>
-
-          <!-- Skills Section -->
-          <h4 style="margin-top:14px; margin-bottom:6px;">Skills</h4>
-          <div style="background:var(--mgk-bg-card); border:1px solid var(--mgk-border-glass); border-radius:10px; padding:8px;">
-            ${Object.entries(data.skills).slice(0, 10).map(([key, sk]) => `
-              <div style="display:flex; justify-content:space-between; font-size:0.8rem; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
-                <span style="text-transform:capitalize;">${key}</span>
-                <span style="font-weight:700;">+${sk.total || 0}</span>
-              </div>
-            `).join('')}
-          </div>
+      <div class="mgk-tab">
+        <div class="mgk-stat-grid">
+          ${statBox(t("Sheets.AC", "AC"), data.ac)}
+          ${statBox(t("Sheets.Speed", "SPEED"), `${data.speed}`)}
+          ${statBox(t("Sheets.HitDice", "HIT DICE"), `${this.num(data.hd.value)}/${this.num(data.hd.max)}`)}
+          ${statBox(t("Sheets.Initiative", "INITIATIVE"), signed(data.init))}
         </div>
-
-        <!-- Middle Column: Quick Actions & Spells -->
-        <div class="mgk-col-mid">
-          <div class="mgk-actions-row">
-            <div class="mgk-action-btn"><i class="fas fa-running"></i>Dash</div>
-            <div class="mgk-action-btn"><i class="fas fa-shield-alt"></i>Dodge</div>
-            <div class="mgk-action-btn"><i class="fas fa-hand-paper"></i>Disengage</div>
-            <div class="mgk-action-btn"><i class="fas fa-fist-raised"></i>Grapple</div>
-            <div class="mgk-action-btn"><i class="fas fa-user-ninja"></i>Hide</div>
-          </div>
-
-          <h4>Weapons & Attacks</h4>
-          ${data.weapons.map(w => `
-            <div style="display:flex; align-items:center; justify-content:space-between; padding:8px; margin-bottom:6px; background:var(--mgk-bg-card); border:1px solid var(--mgk-border-glass); border-radius:8px;">
-              <div style="display:flex; align-items:center; gap:8px;">
-                <img src="${w.img}" style="width:32px; height:32px; border-radius:4px;">
-                <span style="font-size:0.9rem; font-weight:600;">${w.name}</span>
-              </div>
-              <button style="padding:4px 12px; background:var(--mgk-accent-gradient); border:none; border-radius:6px; color:#fff; font-size:0.8rem; cursor:pointer;" onclick="game.actors.get('${data.actor.id}').items.get('${w.id}').use()">Roll</button>
-            </div>
-          `).join('')}
-
-          <h4 style="margin-top:14px;">Spells & Cantrips</h4>
-          ${data.spells.map(s => `
-            <div style="display:flex; align-items:center; justify-content:space-between; padding:8px; margin-bottom:6px; background:var(--mgk-bg-card); border:1px solid var(--mgk-border-glass); border-radius:8px;">
-              <div style="display:flex; align-items:center; gap:8px;">
-                <img src="${s.img}" style="width:32px; height:32px; border-radius:4px;">
-                <span style="font-size:0.9rem; font-weight:600;">${s.name}</span>
-              </div>
-              <button style="padding:4px 12px; background:var(--mgk-accent-gradient); border:none; border-radius:6px; color:#fff; font-size:0.8rem; cursor:pointer;" onclick="game.actors.get('${data.actor.id}').items.get('${s.id}').use()">Cast</button>
-            </div>
-          `).join('')}
-        </div>
-
-        <!-- Right Column: Currency & Inventory -->
-        <div class="mgk-col-right">
-          <h4>Currency</h4>
-          <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:4px; text-align:center; background:var(--mgk-bg-card); padding:8px; border-radius:8px; border:1px solid var(--mgk-border-glass);">
-            <div><small style="color:var(--mgk-text-muted);">PP</small><div>${data.currency.pp || 0}</div></div>
-            <div><small style="color:var(--mgk-text-muted);">GP</small><div>${data.currency.gp || 0}</div></div>
-            <div><small style="color:var(--mgk-text-muted);">EP</small><div>${data.currency.ep || 0}</div></div>
-            <div><small style="color:var(--mgk-text-muted);">SP</small><div>${data.currency.sp || 0}</div></div>
-            <div><small style="color:var(--mgk-text-muted);">CP</small><div>${data.currency.cp || 0}</div></div>
-          </div>
-
-          <h4 style="margin-top:14px;">Equipment (${data.equipment.length})</h4>
-          ${data.equipment.map(e => `
-            <div style="display:flex; align-items:center; justify-content:space-between; padding:6px 8px; margin-bottom:4px; background:var(--mgk-bg-card); border-radius:6px; font-size:0.85rem;">
-              <div style="display:flex; align-items:center; gap:6px;">
-                <img src="${e.img}" style="width:24px; height:24px; border-radius:4px;">
-                <span>${e.name}</span>
-              </div>
-              <span style="color:var(--mgk-text-muted);">x${e.system.quantity || 1}</span>
-            </div>
-          `).join('')}
-        </div>
+        <div class="mgk-ability-grid">${abilityCards}</div>
+        ${section(t("Sheets.Skills", "Skills"), skillRows || empty(), { count: Object.keys(data.skills).length })}
       </div>
     `;
   }
+
+  static renderCombat(data) {
+    const quickActions = [
+      { key: "dash", icon: "fa-person-running", label: t("Sheets.Dash", "Dash") },
+      { key: "disengage", icon: "fa-person-walking-arrow-right", label: t("Sheets.Disengage", "Disengage") },
+      { key: "dodge", icon: "fa-shield", label: t("Sheets.Dodge", "Dodge") },
+      { key: "grapple", icon: "fa-hands-bound", label: t("Sheets.Grapple", "Grapple") },
+      { key: "hide", icon: "fa-eye-slash", label: t("Sheets.Hide", "Hide") },
+      { key: "shove", icon: "fa-hand", label: t("Sheets.Shove", "Shove") }
+    ].map(a => `
+      <div class="mgk-action-btn">
+        <i class="fas ${esc(a.icon)}"></i><span>${esc(a.label)}</span>
+      </div>
+    `).join("");
+
+    const weapons = data.weapons.map(w => itemRow({
+      id: w.id, img: w.img, name: w.name, chips: this.itemChips(w)
+    })).join("");
+
+    const cantrips = data.spells.filter(s => s.system.level === 0);
+    const leveled = data.spells.filter(s => s.system.level > 0 && this.isPrepared(s));
+
+    const activeFeats = data.feats.filter(f => f.system?.uses?.max || f.system?.activation?.type);
+
+    return `
+      <div class="mgk-tab">
+        <div class="mgk-actions-row">${quickActions}</div>
+        ${section(t("Sheets.Weapons", "Weapons"), weapons || empty(), { count: data.weapons.length })}
+        ${section(t("Sheets.Cantrip", "Cantrips"), cantrips.map(s => itemRow({
+          id: s.id, img: s.img, name: s.name, chips: this.itemChips(s), actionLabel: ""
+        })).join("") || empty(), { count: cantrips.length })}
+        ${section(t("Sheets.PreparedSpells", "Prepared Spells"), leveled.map(s => itemRow({
+          id: s.id, img: s.img, name: s.name,
+          subtitle: this.levelLabel(s.system.level), chips: this.itemChips(s)
+        })).join("") || empty(), { count: leveled.length })}
+        ${section(t("Sheets.Features", "Features"), activeFeats.map(f => itemRow({
+          id: f.id, img: f.img, name: f.name, chips: this.itemChips(f)
+        })).join("") || empty(), { count: activeFeats.length })}
+      </div>
+    `;
+  }
+
+  static isPrepared(spell) {
+    const prep = spell.system?.preparation ?? {};
+    if (prep.mode && prep.mode !== "prepared") return true;   // pact, innate, always...
+    return prep.prepared !== false;
+  }
+
+  static renderInventory(data) {
+    const groups = {};
+    for (const item of data.gear) {
+      (groups[item.type] ??= []).push(item);
+    }
+
+    const currency = `
+      <div class="mgk-currency">
+        ${["pp", "gp", "ep", "sp", "cp"].map(c => `
+          <div><small>${esc(c.toUpperCase())}</small><div>${esc(this.num(data.currency[c]))}</div></div>
+        `).join("")}
+      </div>
+      ${data.encumbrance ? `
+        <div class="mgk-encumbrance">
+          <div class="mgk-bar"><span style="width:${esc(Math.min(100, this.num(data.encumbrance.pct)))}%"></span></div>
+          <small>${esc(this.num(data.encumbrance.value))} / ${esc(this.num(data.encumbrance.max))} ${esc(data.encumbrance.units ?? "lbs")}</small>
+        </div>` : ""}
+    `;
+
+    const sections = Object.entries(groups).map(([type, items]) => {
+      const labels = CONFIG.Item?.typeLabels ?? {};
+      const label = labels[type] ?? labels[`${game.system.id}.${type}`] ?? type;
+      const rows = items.map(i => itemRow({
+        id: i.id, img: i.img, name: i.name,
+        subtitle: this.num(i.system?.quantity, 1) > 1 ? `x${this.num(i.system.quantity, 1)}` : "",
+        chips: this.itemChips(i)
+      })).join("");
+      return section(game.i18n.localize(label), rows, { count: items.length });
+    }).join("");
+
+    return `<div class="mgk-tab">${currency}${sections || empty()}</div>`;
+  }
+
+  static renderFeatures(data) {
+    const classes = actorItemsByType(data.actor, ["class", "subclass"]);
+    const species = actorItemsByType(data.actor, ["race", "species", "background"]);
+
+    const featRows = data.feats.map(f => itemRow({
+      id: f.id, img: f.img, name: f.name, chips: this.itemChips(f)
+    })).join("");
+
+    return `
+      <div class="mgk-tab">
+        ${section(t("Sheets.Class", "Class"), classes.map(c => itemRow({
+          id: c.id, img: c.img, name: c.name,
+          subtitle: c.system?.levels ? `Lvl ${c.system.levels}` : "", expandable: true
+        })).join("") || empty(), { count: classes.length })}
+        ${section(t("Sheets.Origin", "Origin"), species.map(c => itemRow({
+          id: c.id, img: c.img, name: c.name, expandable: true
+        })).join("") || empty(), { count: species.length })}
+        ${section(t("Sheets.Features", "Features"), featRows || empty(), { count: data.feats.length })}
+      </div>
+    `;
+  }
+
+  static renderSpells(data) {
+    if (!data.spells.length) return `<div class="mgk-tab">${empty(t("Sheets.NoSpells", "No spells."))}</div>`;
+
+    const byLevel = new Map();
+    for (const spell of data.spells) {
+      const level = spell.system?.level ?? 0;
+      if (!byLevel.has(level)) byLevel.set(level, []);
+      byLevel.get(level).push(spell);
+    }
+
+    const slotFor = (level) => data.spellSlots.find(s => s.level === level);
+
+    const sections = [...byLevel.keys()].sort((a, b) => a - b).map(level => {
+      const slot = slotFor(level);
+      const header = `${esc(this.levelLabel(level))}${slot ? ` ${pips(slot.value, slot.max)}` : ""}`;
+      const rows = byLevel.get(level).map(s => itemRow({
+        id: s.id, img: s.img, name: s.name,
+        subtitle: [s.labels?.components?.vsm, s.labels?.school].filter(Boolean).join(" · "),
+        chips: [this.isPrepared(s) ? null : t("Sheets.Unprepared", "unprepared"), ...this.itemChips(s)]
+      })).join("");
+      // `header` already contains markup from pips(), so it is injected raw.
+      return `
+        <details class="mgk-section" open>
+          <summary class="mgk-section-title"><span>${header}</span><i class="fas fa-chevron-down"></i></summary>
+          <div class="mgk-section-body">${rows}</div>
+        </details>
+      `;
+    }).join("");
+
+    return `<div class="mgk-tab">${sections}</div>`;
+  }
+
+  static renderEffects(data) {
+    const active = data.actor.statuses ?? new Set();
+    const grid = (CONFIG.statusEffects ?? []).map(se => {
+      const id = se.id;
+      const label = game.i18n.localize(se.name ?? se.label ?? id);
+      return `
+        <button type="button" class="mgk-status${active.has(id) ? " active" : ""}"
+                data-action="toggle-status" data-status="${esc(id)}">
+          <img src="${esc(se.img ?? se.icon)}" alt="" loading="lazy">
+          <span>${esc(label)}</span>
+        </button>
+      `;
+    }).join("");
+
+    const effects = data.effects.map(e => `
+      <div class="mgk-row">
+        <div class="mgk-row-main">
+          <img class="mgk-row-img" src="${esc(e.img ?? e.icon)}" alt="">
+          <div class="mgk-row-text">
+            <span class="mgk-row-name">${esc(e.name)}</span>
+            <span class="mgk-row-sub">${esc(e.disabled ? t("Sheets.Disabled", "Disabled") : t("Sheets.Active", "Active"))}</span>
+          </div>
+        </div>
+      </div>
+    `).join("");
+
+    return `
+      <div class="mgk-tab">
+        ${section(t("Sheets.Conditions", "Conditions"), `<div class="mgk-status-grid">${grid}</div>`)}
+        ${section(t("Sheets.ActiveEffects", "Active Effects"), effects || empty(), { count: data.effects.length })}
+      </div>
+    `;
+  }
+
+  static renderOther(data) {
+    const senses = Object.entries(data.senses)
+      .filter(([key, val]) => key !== "units" && this.num(val) > 0)
+      .map(([key, val]) => `<div class="mgk-kv"><span>${esc(key)}</span><span>${esc(this.num(val))} ${esc(data.senses.units ?? "ft")}</span></div>`)
+      .join("");
+
+    const resources = Object.entries(data.resources)
+      .filter(([, r]) => r && r.max)
+      .map(([key, r]) => `<div class="mgk-kv"><span>${esc(r.label || key)}</span><span>${esc(r.value ?? 0)} / ${esc(r.max)}</span></div>`)
+      .join("");
+
+    return `
+      <div class="mgk-tab">
+        <div class="mgk-rest-row">
+          <button type="button" class="mgk-big-btn" data-action="rest-short">
+            <i class="fas fa-utensils"></i> ${esc(t("Sheets.ShortRest", "Short Rest"))}
+          </button>
+          <button type="button" class="mgk-big-btn" data-action="rest-long">
+            <i class="fas fa-bed"></i> ${esc(t("Sheets.LongRest", "Long Rest"))}
+          </button>
+        </div>
+        ${section(t("Sheets.Senses", "Senses"), senses || empty())}
+        ${section(t("Sheets.Resources", "Resources"), resources || empty())}
+        <button type="button" class="mgk-big-btn wide" data-action="open-native">
+          <i class="fas fa-up-right-from-square"></i> ${esc(t("Sheets.OpenNative", "Open full sheet"))}
+        </button>
+      </div>
+    `;
+  }
+
+  /* -------------------------------------------- */
+  /*  Rolls                                       */
+  /* -------------------------------------------- */
+
+  /** dnd5e 5.x takes a config object; 4.x took positional arguments. */
+  static get usesObjectRollApi() {
+    return Number.parseInt(game.system.version, 10) >= 5;
+  }
+
+  static async rollAbility(actor, ability, event) {
+    if (actor.rollAbilityCheck) return actor.rollAbilityCheck({ ability, event });
+    return actor.rollAbilityTest?.(ability, { event });
+  }
+
+  static async rollSave(actor, ability, event) {
+    if (actor.rollSavingThrow) return actor.rollSavingThrow({ ability, event });
+    return actor.rollAbilitySave?.(ability, { event });
+  }
+
+  static async rollSkill(actor, skill, event) {
+    if (!actor.rollSkill) return;
+    if (this.usesObjectRollApi) return actor.rollSkill({ skill, event });
+    return actor.rollSkill(skill, { event });
+  }
+
+  static async rest(actor, type) {
+    if (type === "short") return actor.shortRest?.();
+    return actor.longRest?.();
+  }
+}
+
+function actorItemsByType(actor, types) {
+  return actor.items.filter(i => types.includes(i.type));
 }

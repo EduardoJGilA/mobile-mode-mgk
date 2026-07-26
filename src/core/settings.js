@@ -1,35 +1,51 @@
+import { MODULE_ID, t } from './utils.js';
+
 /**
  * Settings Registration for Mobile Mode MGK
  */
 export function registerSettings() {
-  game.settings.register("mobile-mode-mgk", "enableMobile", {
-    name: game.i18n.localize("MOBILE_MODE_MGK.Settings.EnableMobile"),
-    hint: game.i18n.localize("MOBILE_MODE_MGK.Settings.EnableMobileHint"),
+  const reg = (key, data) => game.settings.register(MODULE_ID, key, {
+    name: t(`Settings.${key}`, key),
+    hint: t(`Settings.${key}Hint`, ""),
     scope: "client",
     config: true,
+    ...data
+  });
+
+  reg("enableMobile", {
     type: Boolean,
     default: true,
     onChange: () => window.location.reload()
   });
 
-  game.settings.register("mobile-mode-mgk", "hideQuickControls", {
-    name: game.i18n.localize("MOBILE_MODE_MGK.Settings.HideQuickControls"),
-    hint: game.i18n.localize("MOBILE_MODE_MGK.Settings.HideQuickControlsHint"),
-    scope: "client",
-    config: true,
+  reg("forceMobile", {
+    type: String,
+    default: "auto",
+    choices: {
+      auto: t("Settings.forceMobileAuto", "Auto-detect"),
+      on: t("Settings.forceMobileOn", "Always on"),
+      off: t("Settings.forceMobileOff", "Always off")
+    },
+    onChange: () => window.location.reload()
+  });
+
+  reg("hideNativeUI", {
+    type: Boolean,
+    default: true,
+    onChange: (val) => document.body.classList.toggle("mgk-hide-native", val)
+  });
+
+  reg("hideQuickControls", {
     type: Boolean,
     default: false,
     onChange: (val) => {
-      const el = document.getElementById("mgk-quick-controls");
-      if (el) el.style.display = val ? "none" : "flex";
+      const display = val ? "none" : "flex";
+      document.getElementById("mgk-left-controls")?.style.setProperty("display", display);
+      document.getElementById("mgk-right-controls")?.style.setProperty("display", display);
     }
   });
 
-  game.settings.register("mobile-mode-mgk", "hideAvatarCarousel", {
-    name: game.i18n.localize("MOBILE_MODE_MGK.Settings.HideAvatarCarousel"),
-    hint: game.i18n.localize("MOBILE_MODE_MGK.Settings.HideAvatarCarouselHint"),
-    scope: "client",
-    config: true,
+  reg("hideAvatarCarousel", {
     type: Boolean,
     default: false,
     onChange: (val) => {
@@ -38,21 +54,37 @@ export function registerSettings() {
     }
   });
 
-  game.settings.register("mobile-mode-mgk", "enableCanvasFreeze", {
-    name: game.i18n.localize("MOBILE_MODE_MGK.Settings.EnableCanvasFreeze"),
-    hint: game.i18n.localize("MOBILE_MODE_MGK.Settings.EnableCanvasFreezeHint"),
-    scope: "client",
-    config: true,
+  reg("sheetOnlyMode", {
+    type: Boolean,
+    default: false,
+    onChange: async (val) => {
+      // Foundry only reads noCanvas at load, so mirror it and reload.
+      if (game.settings.get("core", "noCanvas") !== val) await game.settings.set("core", "noCanvas", val);
+      window.location.reload();
+    }
+  });
+
+  reg("enableCanvasFreeze", {
     type: Boolean,
     default: true
   });
 
-  game.settings.register("mobile-mode-mgk", "vramLimitWarning", {
-    name: game.i18n.localize("MOBILE_MODE_MGK.Settings.VramLimitWarning"),
-    hint: game.i18n.localize("MOBILE_MODE_MGK.Settings.VramLimitWarningHint"),
+  reg("canvasFreezeDelay", {
+    type: Number,
+    default: 15,
+    range: { min: 5, max: 120, step: 5 }
+  });
+
+  reg("vramLimitWarning", {
     scope: "world",
-    config: true,
     type: Number,
     default: 400
+  });
+
+  reg("imageOptimizerThreshold", {
+    scope: "world",
+    type: Number,
+    default: 2048,
+    range: { min: 1024, max: 8192, step: 256 }
   });
 }
