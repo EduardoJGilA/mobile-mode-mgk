@@ -1,0 +1,61 @@
+name: CI
+
+# Runs on every push and pull request, so a broken commit is visible
+# immediately instead of at release time.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Lint, test and build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Smoke Tests
+        run: npm test
+
+      - name: Build JS & CSS
+        run: npm run build
+
+      - name: Validate module.json and language files
+        run: |
+          node -e '
+            const fs = require("fs");
+            const module_ = JSON.parse(fs.readFileSync("module.json", "utf8"));
+            const en = JSON.parse(fs.readFileSync("lang/en.json", "utf8"));
+            const es = JSON.parse(fs.readFileSync("lang/es.json", "utf8"));
+
+            for (const file of [...module_.esmodules, ...module_.styles]) {
+              if (!fs.existsSync(file)) throw new Error(`module.json references a missing file: ${file}`);
+            }
+            for (const lang of module_.languages) {
+              if (!fs.existsSync(lang.path)) throw new Error(`Missing language file: ${lang.path}`);
+            }
+
+            const flatten = (obj, prefix = "") => Object.entries(obj).reduce((acc, [key, value]) => {
+              const path = prefix ? `${prefix}.${key}` : key;
+              return Object.assign(acc, typeof value === "object" ? flatten(value, path) : { [path]: value });
+            }, {});
+
+            const missing = Object.keys(flatten(en)).filter(key => !(key in flatten(es)));
+            if (missing.length) throw new Error(`es.json is missing keys: ${missing.join(", ")}`);
+
+            console.log("module.json and language files are consistent");
+          '

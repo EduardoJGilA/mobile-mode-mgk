@@ -1,8 +1,19 @@
 name: Release Module
 
+# Pushing a `v*` tag is enough — the release is created from it. Publishing a
+# release by hand in the GitHub UI also works, and so does running this
+# workflow manually with an explicit version.
 on:
+  push:
+    tags:
+      - 'v*'
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release, without the leading v (e.g. 1.0.0)'
+        required: true
 
 permissions:
   contents: write
@@ -21,7 +32,7 @@ jobs:
           cache: 'npm'
 
       - name: Install Dependencies
-        run: npm ci || npm install
+        run: npm ci
 
       - name: Lint
         run: npm run lint
@@ -33,13 +44,22 @@ jobs:
         run: npm run build
 
       - name: Extract Version
-        id: get_version
         run: |
-          VERSION="${GITHUB_REF#refs/tags/v}"
-          if [ "$VERSION" = "$GITHUB_REF" ]; then
+          set -euo pipefail
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            # Works for both refs/tags/v1.2.3 and refs/tags/1.2.3
             VERSION="${GITHUB_REF#refs/tags/}"
+            VERSION="${VERSION#v}"
           fi
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          if [ -z "$VERSION" ] || [ "$VERSION" = "$GITHUB_REF" ]; then
+            echo "Could not determine a version from ref '$GITHUB_REF'." >&2
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "TAG=v$VERSION" >> "$GITHUB_ENV"
+          echo "Releasing version $VERSION"
 
       - name: Update module.json Version & Manifest URLs
         run: |
@@ -47,20 +67,25 @@ jobs:
             const fs = require("fs");
             const m = JSON.parse(fs.readFileSync("module.json", "utf8"));
             const ver = process.env.VERSION;
+            const repo = process.env.GITHUB_REPOSITORY;
             m.version = ver;
-            m.url = `https://github.com/${process.env.GITHUB_REPOSITORY}`;
-            m.manifest = `https://github.com/${process.env.GITHUB_REPOSITORY}/releases/latest/download/module.json`;
-            m.download = `https://github.com/${process.env.GITHUB_REPOSITORY}/releases/download/v${ver}/module.zip`;
-            fs.writeFileSync("module.json", JSON.stringify(m, null, 2));
+            m.url = `https://github.com/${repo}`;
+            m.manifest = `https://github.com/${repo}/releases/latest/download/module.json`;
+            m.download = `https://github.com/${repo}/releases/download/v${ver}/module.zip`;
+            fs.writeFileSync("module.json", JSON.stringify(m, null, 2) + "\n");
+            console.log(`module.json set to ${ver}`);
           '
 
       - name: Create Zip Artifact
-        run: |
-          zip -r module.zip module.json README.md LICENSE dist/ lang/
+        run: zip -r module.zip module.json README.md LICENSE dist/ lang/
 
       - name: Upload Release Assets
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
+          # Needed when the tag push (not a published release) starts this run.
+          tag_name: ${{ env.TAG }}
+          name: ${{ env.TAG }}
+          generate_release_notes: true
           files: |
             module.json
             module.zip
