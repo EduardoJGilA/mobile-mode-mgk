@@ -59,18 +59,25 @@ export class TouchGestureHandler {
   }
 
   static patchTokenDrag() {
-    const TokenClass = globalThis.Token;
-    if (!TokenClass?.prototype || TokenClass.prototype._mgkPatched) return;
-    TokenClass.prototype._mgkPatched = true;
+    const prototypes = new Set([
+      globalThis.Token?.prototype,
+      globalThis.Token5e?.prototype,
+      CONFIG?.Token?.objectClass?.prototype,
+      canvas?.tokens?.placeables?.[0]?.constructor?.prototype
+    ].filter(Boolean));
 
-    const origFinalize = TokenClass.prototype._finalizeDragLeft;
-    if (typeof origFinalize === "function") {
-      TokenClass.prototype._finalizeDragLeft = function(...args) {
+    for (const proto of prototypes) {
+      if (proto._mgkPatched) continue;
+      proto._mgkPatched = true;
+
+      const origFinalize = proto._finalizeDragLeft;
+      proto._finalizeDragLeft = function(...args) {
         if (!this._dragData) this._dragData = {};
+        if (!this._dragRuler) this._dragRuler = {};
         try {
-          return origFinalize.apply(this, args);
+          return origFinalize ? origFinalize.apply(this, args) : undefined;
         } catch (err) {
-          console.warn("Mobile Mode MGK | Safe-guarded Token._finalizeDragLeft", err);
+          console.warn("Mobile Mode MGK | Safe-guarded _finalizeDragLeft", err);
         }
       };
     }

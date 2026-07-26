@@ -79,6 +79,8 @@ Hooks.once("ready", () => {
 Hooks.on("canvasReady", () => {
   if (!api.active) return;
 
+  TouchGestureHandler.patchTokenDrag();
+
   // Rebuild the handler each scene, but tear the old one down first so its
   // listeners do not accumulate across scene changes.
   api.gestureHandler?.destroy();
