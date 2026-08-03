@@ -133,7 +133,8 @@
       "Dodge": "Dodge",
       "Grapple": "Grapple",
       "Hide": "Hide",
-      "Shove": "Shove"
+      "Shove": "Shove",
+      "Gear": "Gear"
     },
     "Optimizer": {
       "Title": "Mobile Image Optimizer",

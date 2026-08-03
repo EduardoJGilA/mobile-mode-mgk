@@ -1587,3 +1587,70 @@ body.mgk-sheet-only #canvas { display: none !important; }
 }
 
 .mgk-ruler-btn:active { transform: scale(0.92); }
+
+
+/* ------------------------------------------------------------------ *
+ *  Vaesen
+ *
+ *  Year Zero has no hit points: a character is four attributes with their
+ *  skills, and two condition tracks. Attributes read as a value first, the
+ *  way the printed sheet does, and the whole row is the roll target.
+ * ------------------------------------------------------------------ */
+
+.mgk-vsn-attr .mgk-row-main { gap: 10px; align-items: center; }
+
+.mgk-vsn-score {
+  flex: none;
+  min-width: 40px;
+  padding: 5px 0;
+  font-family: var(--mgk-font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--mgk-brass);
+  background: var(--mgk-slate-hi);
+  clip-path: var(--mgk-chamfer-sm);
+}
+
+.mgk-vsn-attr .mgk-row-name {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.78rem;
+}
+
+/* Skills sit under their attribute, indented and quieter. */
+.mgk-vsn-skill { margin-left: 12px; }
+.mgk-vsn-skill .mgk-row-main { padding-block: 4px; }
+.mgk-vsn-skill .mgk-row-name { font-weight: 500; }
+.mgk-vsn-skill .mgk-chip { min-width: 28px; text-align: center; color: var(--mgk-brass); }
+
+/* Condition tracks: three states, then Broken across the full width. */
+.mgk-vsn-track { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+
+.mgk-status.mgk-vsn-cond {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 6px 4px;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+
+.mgk-status.mgk-vsn-cond.active {
+  color: var(--mgk-ink);
+  background: var(--mgk-brass);
+  border-color: var(--mgk-brass);
+}
+
+.mgk-status.mgk-vsn-cond.broken {
+  grid-column: 1 / -1;
+  border-style: dashed;
+}
+
+.mgk-status.mgk-vsn-cond.broken.active { border-style: solid; }
+
+.mgk-chip.active { color: var(--mgk-brass); }

@@ -133,7 +133,8 @@
       "Dodge": "Esquivar",
       "Grapple": "Agarrar",
       "Hide": "Esconderse",
-      "Shove": "Empujar"
+      "Shove": "Empujar",
+      "Gear": "Equipo"
     },
     "Optimizer": {
       "Title": "Optimizador de imágenes móvil",

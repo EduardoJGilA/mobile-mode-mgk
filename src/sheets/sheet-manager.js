@@ -1,5 +1,6 @@
 import { DnD5eAdapter } from './adapters/dnd5e-adapter.js';
 import { PF2eAdapter } from './adapters/pf2e-adapter.js';
+import { VaesenAdapter } from './adapters/vaesen-adapter.js';
 import { AgnosticAdapter } from './adapters/agnostic-adapter.js';
 import { HpWidget } from '../ui/hp-widget.js';
 import { SheetInterceptor } from './sheet-interceptor.js';
@@ -39,6 +40,7 @@ export class SheetManager {
     switch (game.system.id) {
       case "dnd5e": return DnD5eAdapter;
       case "pf2e": return PF2eAdapter;
+      case "vaesen": return VaesenAdapter;
       default: return AgnosticAdapter;
     }
   }
@@ -97,7 +99,8 @@ export class SheetManager {
     panel.querySelector("#mgk-close-sheet").addEventListener("click", () => this.close());
     panel.querySelector("#mgk-sheet-hp").addEventListener("click", (ev) => {
       ev.stopPropagation();
-      if (this.currentActor) HpWidget.open(this.currentActor, this.adapter.hpPaths);
+      if (!this.currentActor || this.adapter.hasHp === false) return;
+      HpWidget.open(this.currentActor, this.adapter.hpPaths);
     });
 
     panel.querySelector("#mgk-sheet-nav").addEventListener("click", (ev) => {
@@ -148,7 +151,11 @@ export class SheetManager {
 
     const hp = data.hp ?? { value: 0, max: 0 };
     const hpBtn = this.panel.querySelector("#mgk-sheet-hp");
-    hpBtn.innerHTML = `<span class="mgk-hp-value">${esc(hp.value ?? 0)}</span> / ${esc(hp.max ?? 0)} <i class="fas fa-heart"></i>`;
+    const hasHp = this.adapter.hasHp ?? true;
+    hpBtn.hidden = !hasHp;
+    hpBtn.innerHTML = hasHp
+      ? `<span class="mgk-hp-value">${esc(hp.value ?? 0)}</span> / ${esc(hp.max ?? 0)} <i class="fas fa-heart"></i>`
+      : "";
 
     const body = this.panel.querySelector("#mgk-sheet-body");
     const scroll = body.scrollTop;
