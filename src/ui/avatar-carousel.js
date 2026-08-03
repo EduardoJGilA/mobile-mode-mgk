@@ -25,10 +25,37 @@ export class AvatarCarousel {
 
   static getActors() {
     if (!game.actors) return [];
-    const sceneActorIds = new Set(canvas.tokens?.placeables.filter(t => t.actor?.isOwner).map(t => t.actor.id) ?? []);
-    if (game.user.character?.id) sceneActorIds.add(game.user.character.id);
+    
+    const userChar = game.user.character;
+    const owned = game.actors.filter(a => a.isOwner && a.type !== "vehicle");
 
-    return game.actors.filter(a => a.isOwner && a.hasPlayerOwner && a.type !== "vehicle" && sceneActorIds.has(a.id));
+    if (!game.user.isGM) {
+      const set = new Map();
+      if (userChar && userChar.type !== "vehicle") set.set(userChar.id, userChar);
+      for (const a of owned) {
+        if (!set.has(a.id)) set.set(a.id, a);
+      }
+      return Array.from(set.values());
+    }
+
+    const set = new Map();
+    if (userChar && userChar.type !== "vehicle") set.set(userChar.id, userChar);
+
+    const sceneActors = canvas.tokens?.placeables
+      ?.map(t => t.actor)
+      .filter(a => a && a.isOwner && a.type !== "vehicle") ?? [];
+    for (const a of sceneActors) set.set(a.id, a);
+
+    const playerChars = game.actors.filter(a => a.hasPlayerOwner && a.type !== "vehicle");
+    for (const a of playerChars) {
+      if (!set.has(a.id)) set.set(a.id, a);
+    }
+
+    for (const a of owned) {
+      if (!set.has(a.id)) set.set(a.id, a);
+    }
+
+    return Array.from(set.values());
   }
 
   static render() {

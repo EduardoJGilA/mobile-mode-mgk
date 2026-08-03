@@ -1,12 +1,13 @@
 import { esc, t } from '../core/utils.js';
 import { TemplatePlacer } from '../touch/template-placer.js';
 import { activateTool, restoreSelect, toolUnavailable, TOKEN_CONTROLS } from '../core/scene-tools.js';
+import { AvatarCarousel } from './avatar-carousel.js';
 
 /**
  * Floating control stacks.
  *
  * Left: an expandable tool column (ruler, templates, targets, volume, journal,
- * A/V, logout) plus settings. Right: quick dice and the chat drawer toggle.
+ * A/V, logout) plus settings. Right: character sheet, quick dice and the chat drawer toggle.
  */
 export class QuickControls {
   static render() {
@@ -103,13 +104,33 @@ export class QuickControls {
     const container = document.createElement("div");
     container.id = "mgk-right-controls";
     container.innerHTML = `
+      ${this.button("mgk-btn-sheet", "fa-user", "QuickControls.Sheet", "Character Sheet")}
       ${this.button("mgk-btn-dice", "fa-dice-d20", "QuickControls.Dice", "Quick Roll")}
       ${this.button("mgk-btn-chat", "fa-comment-alt", "QuickControls.Chat", "Chat")}
     `;
     document.body.appendChild(container);
 
+    container.querySelector("#mgk-btn-sheet").addEventListener("click", () => this.openCharacterSheet());
     container.querySelector("#mgk-btn-dice").addEventListener("click", () => this.quickRoll());
     container.querySelector("#mgk-btn-chat").addEventListener("click", () => Hooks.callAll("mobileModeToggleChat"));
+  }
+
+  static openCharacterSheet() {
+    let actor = null;
+    if (AvatarCarousel.activeActorId) {
+      actor = game.actors?.get(AvatarCarousel.activeActorId);
+    }
+    if (!actor) {
+      actor = game.user.character;
+    }
+    if (!actor && game.actors) {
+      actor = game.actors.find(a => a.isOwner && a.type !== "vehicle");
+    }
+    if (actor) {
+      Hooks.callAll("mobileModeOpenSheet", actor);
+    } else {
+      ui.notifications?.warn(t("QuickControls.NoCharacterFound", "No character assigned or owned."));
+    }
   }
 
   /* -------------------------------------------- */

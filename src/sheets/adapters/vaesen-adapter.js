@@ -248,27 +248,38 @@ export class VaesenAdapter {
   }
 
   static trackHtml(track, data) {
-    const label = game.i18n.localize(track === "physical" ? "CONDITION.PHYSICAL" : "CONDITION.MENTAL");
+    const isPhys = track === "physical";
+    const label = game.i18n.localize(isPhys ? "CONDITION.PHYSICAL" : "CONDITION.MENTAL");
+    const icon = isPhys ? "fa-heart-pulse" : "fa-brain";
 
     const states = Object.entries(data.states ?? {}).map(([key, state]) => `
-      <button type="button" class="mgk-status mgk-vsn-cond${state.isChecked ? " active" : ""}"
+      <button type="button" class="mgk-vsn-cond${state.isChecked ? " active" : ""}"
               data-action="vsn-condition" data-cond="${esc(key)}">
+        <i class="fas ${state.isChecked ? "fa-check-square" : "fa-square"}"></i>
         <span>${esc(game.i18n.localize(state.label))}</span>
       </button>`).join("");
 
     const broken = `
-      <button type="button" class="mgk-status mgk-vsn-cond broken${data.isBroken ? " active" : ""}"
+      <button type="button" class="mgk-vsn-cond broken${data.isBroken ? " active" : ""}"
               data-action="vsn-condition" data-cond="${esc(track)}">
+        <i class="fas ${data.isBroken ? "fa-skull" : "fa-heart-crack"}"></i>
         <span>${esc(game.i18n.localize("CONDITION.BROKEN"))}</span>
       </button>`;
 
-    const recovery = `
-      <button type="button" class="mgk-big-btn wide" data-action="vsn-recovery" data-track="${esc(track)}">
-        <i class="fas fa-dice-d6"></i>
-        ${esc(game.i18n.localize(track === "physical" ? "UI.ROLL.PREC" : "UI.ROLL.MREC"))}
-      </button>`;
+    const recoveryLabel = game.i18n.localize(isPhys ? "UI.ROLL.PREC" : "UI.ROLL.MREC");
 
-    return section(label, `<div class="mgk-status-grid mgk-vsn-track">${states}${broken}</div>${recovery}`);
+    const header = `
+      <div class="mgk-vsn-track-header">
+        <div class="mgk-vsn-track-title">
+          <i class="fas ${icon}"></i>
+          <span>${esc(label)}</span>
+        </div>
+        <button type="button" class="mgk-vsn-recovery-btn" data-action="vsn-recovery" data-track="${esc(track)}" title="${esc(recoveryLabel)}">
+          <i class="fas fa-dice-d6"></i> ${esc(recoveryLabel)}
+        </button>
+      </div>`;
+
+    return `<div class="mgk-vsn-track-card">${header}<div class="mgk-vsn-states">${states}${broken}</div></div>`;
   }
 
   static renderOther() {

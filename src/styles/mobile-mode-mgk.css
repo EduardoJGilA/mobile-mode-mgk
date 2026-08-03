@@ -855,6 +855,116 @@ body.mgk-tablet .mgk-sheet-drawer.open { transform: translateX(0); }
 
 .mgk-status.active img { filter: none; }
 
+/* Vaesen specific condition tracks layout */
+.mgk-vsn-track-card {
+  background: linear-gradient(158deg, var(--mgk-slate-hi), var(--mgk-slate));
+  clip-path: var(--mgk-chamfer);
+  box-shadow: inset 0 1px 0 var(--mgk-edge-soft);
+  padding: 12px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mgk-vsn-track-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--mgk-edge);
+}
+
+.mgk-vsn-track-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  color: var(--mgk-bone);
+}
+
+.mgk-vsn-track-title i {
+  color: var(--mgk-brass);
+  font-size: 0.95rem;
+}
+
+.mgk-vsn-recovery-btn {
+  background: transparent;
+  border: 1px solid var(--mgk-brass-dim);
+  color: var(--mgk-brass);
+  font-family: var(--mgk-font-ui);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 5px 9px;
+  cursor: pointer;
+  clip-path: var(--mgk-chamfer-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: background 0.16s var(--mgk-ease), color 0.16s var(--mgk-ease);
+}
+
+.mgk-vsn-recovery-btn:active {
+  background: var(--mgk-brass);
+  color: var(--mgk-ink);
+}
+
+.mgk-vsn-states {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+
+.mgk-vsn-cond {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  background: var(--mgk-ink);
+  border: 1px solid var(--mgk-edge);
+  color: var(--mgk-ash);
+  font-family: var(--mgk-font-ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  clip-path: var(--mgk-chamfer-sm);
+  transition: all 0.16s var(--mgk-ease);
+  text-align: left;
+}
+
+.mgk-vsn-cond i {
+  font-size: 0.85rem;
+  color: var(--mgk-edge);
+}
+
+.mgk-vsn-cond.active {
+  background: linear-gradient(158deg, var(--mgk-brass-dim), var(--mgk-ink));
+  border-color: var(--mgk-brass);
+  color: var(--mgk-bone);
+}
+
+.mgk-vsn-cond.active i {
+  color: var(--mgk-brass);
+}
+
+.mgk-vsn-cond.broken.active {
+  background: linear-gradient(158deg, var(--mgk-oxide), #8a2a16);
+  border-color: var(--mgk-oxide);
+  color: #ffffff;
+}
+
+.mgk-vsn-cond.broken.active i {
+  color: #ffffff;
+}
+
 /* --------------------------------------------------------------------------
    Misc sheet widgets
    -------------------------------------------------------------------------- */
