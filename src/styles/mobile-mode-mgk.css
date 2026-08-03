@@ -965,6 +965,48 @@ body.mgk-tablet .mgk-sheet-drawer.open { transform: translateX(0); }
   color: #ffffff;
 }
 
+/* Bio & Notes fields */
+.mgk-bio-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.mgk-bio-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mgk-bio-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--mgk-brass);
+}
+
+.mgk-bio-input,
+.mgk-bio-textarea {
+  background: var(--mgk-ink);
+  border: 1px solid var(--mgk-edge);
+  color: var(--mgk-bone);
+  font-family: var(--mgk-font-ui);
+  font-size: 0.85rem;
+  padding: 8px 10px;
+  clip-path: var(--mgk-chamfer-sm);
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.mgk-bio-input:focus,
+.mgk-bio-textarea:focus {
+  border-color: var(--mgk-brass);
+  outline: none;
+}
+
 /* --------------------------------------------------------------------------
    Misc sheet widgets
    -------------------------------------------------------------------------- */

@@ -112,6 +112,14 @@ export class SheetManager {
     // One delegated listener for every action any adapter emits.
     panel.querySelector("#mgk-sheet-body").addEventListener("click", (ev) => this.onAction(ev));
 
+    // Handle generic field bindings (e.g. bio/notes textareas)
+    panel.querySelector("#mgk-sheet-body").addEventListener("change", async (ev) => {
+      const input = ev.target.closest("[data-binding]");
+      if (!input || !this.currentActor) return;
+      const path = input.dataset.binding;
+      await this.currentActor.update({ [path]: input.value });
+    });
+
     this.attachSwipe(panel);
     return panel;
   }
