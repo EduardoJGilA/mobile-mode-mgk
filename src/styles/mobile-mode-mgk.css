@@ -54,13 +54,30 @@
 
   --mgk-ease: cubic-bezier(0.2, 0.9, 0.3, 1);
 
+  /*
+   * How much of the screen the browser's own bottom bar is covering.
+   *
+   * `vh` measures the largest the viewport ever gets (bars hidden) while `dvh`
+   * tracks what is visible right now, so the difference is exactly the chrome
+   * in the way. Anything pinned with `bottom` needs this or it hides behind
+   * Brave's and Chrome's toolbars. Distinct from safe-area, which is the
+   * device's notch and gesture bar.
+   */
+  --mgk-browser-bottom: 0px;
   --mgk-safe-bottom: env(safe-area-inset-bottom, 0px);
   --mgk-safe-top: env(safe-area-inset-top, 0px);
   --mgk-safe-left: env(safe-area-inset-left, 0px);
   --mgk-safe-right: env(safe-area-inset-right, 0px);
 
   /* Height of the floating control column, used to keep overlays clear of it. */
-  --mgk-controls-clear: calc(24px + var(--mgk-safe-bottom) + 48px + 14px);
+  --mgk-controls-clear: calc(24px + var(--mgk-safe-bottom) + var(--mgk-browser-bottom) + 48px + 14px);
+}
+
+/* Only browsers that understand dvh can report the bar; the rest keep 0. */
+@supports (height: 100dvh) {
+  :root {
+    --mgk-browser-bottom: calc(100vh - 100dvh);
+  }
 }
 
 body.mobile-mode-mgk {
@@ -75,16 +92,6 @@ body.mobile-mode-mgk {
 }
 
 body.mobile-mode-mgk.mgk-ios #interface,
-/*
- * The canvas gestures run on pointer events, where preventDefault() no longer
- * stops the browser from scrolling or zooming — that is decided up front by
- * touch-action. Without this, panning the map drags the page instead.
- */
-body.mobile-mode-mgk #board,
-body.mobile-mode-mgk #board canvas {
-  touch-action: none;
-}
-
 body.mobile-mode-mgk.mgk-ios #board {
   height: 100dvh;
 }
@@ -195,7 +202,7 @@ body.mobile-mode-mgk .dialog {
 body.mobile-mode-mgk #mgk-left-controls,
 body.mobile-mode-mgk #mgk-right-controls {
   position: fixed;
-  bottom: calc(24px + var(--mgk-safe-bottom));
+  bottom: calc(24px + var(--mgk-safe-bottom) + var(--mgk-browser-bottom));
   z-index: 900;
   display: flex;
   flex-direction: column;
@@ -250,7 +257,7 @@ body.mobile-mode-mgk #mgk-right-controls { right: calc(16px + var(--mgk-safe-rig
 
 body.mobile-mode-mgk #mgk-avatar-carousel {
   position: fixed;
-  bottom: calc(24px + var(--mgk-safe-bottom));
+  bottom: calc(24px + var(--mgk-safe-bottom) + var(--mgk-browser-bottom));
   left: 50%;
   transform: translateX(-50%);
   z-index: 850;
@@ -316,6 +323,18 @@ body.mobile-mode-mgk #mgk-avatar-carousel::-webkit-scrollbar { display: none; }
 .mgk-drawer-panel {
   position: fixed;
   inset: 0;
+  /*
+   * `inset: 0` alone measures the layout viewport, which ignores the browser's
+   * own chrome — so the tab row ends up underneath Chrome's or Brave's bottom
+   * bar. `dvh` tracks the space actually visible, on any browser, and the vh
+   * line before it keeps older engines from being left with no height at all.
+   * env(safe-area-*) does not cover this: that is the notch and the gesture
+   * bar, not browser UI.
+   */
+  height: 100vh;
+  height: 100dvh;
+  width: 100%;
+  max-width: 100vw;
   background: var(--mgk-ink);
   z-index: 1000;
   display: flex;
@@ -373,6 +392,23 @@ body.mgk-tablet .mgk-sheet-drawer.open { transform: translateX(0); }
   gap: 10px;
 }
 
+/*
+ * A flex item refuses to shrink below its content unless told to, so without
+ * these the long name pushes the HP box off the row instead of ellipsing.
+ */
+.mgk-header-left {
+  min-width: 0;
+  flex: 1;
+}
+
+.mgk-header-left > div {
+  min-width: 0;
+}
+
+.mgk-header-right {
+  flex: none;
+}
+
 .mgk-header-avatar {
   width: 42px;
   height: 42px;
@@ -418,6 +454,9 @@ body.mgk-tablet .mgk-sheet-drawer.open { transform: translateX(0); }
   gap: 7px;
   cursor: pointer;
   padding: 8px 11px;
+  /* "20 / 59" must stay on one line; wrapping stacks the number over the slash. */
+  white-space: nowrap;
+  flex: none;
 }
 
 .mgk-header-hp .mgk-hp-value { color: var(--mgk-brass); font-size: 1.2rem; }
@@ -1740,9 +1779,20 @@ body.mgk-sheet-only #canvas { display: none !important; }
   overflow: visible !important;
 }
 
+/*
+ * The ring is pushed outside Foundry's own HUD columns, which reach 50px above
+ * and below the token (`#token-hud .col { height: calc(100% + 100px); top: -50px }`)
+ * with their buttons centred on the sides. Anything closer than that overlaps
+ * the elevation, config and target controls.
+ *
+ * Expanding the ring by an inset — rather than offsetting each button — keeps it
+ * centred on tokens of any size, so a 2x2 creature gets the same clearance.
+ */
 #token-hud .mgk-hud-dir-ring {
+  /* Fallback only; TokenHudControls.fitRing measures the real value on render. */
+  --mgk-dir-gap: 90px;
   position: absolute;
-  inset: 0;
+  inset: calc(-1 * var(--mgk-dir-gap));
   pointer-events: none;
   overflow: visible !important;
   z-index: 100 !important;
@@ -1784,16 +1834,27 @@ body.mgk-sheet-only #canvas { display: none !important; }
   background: rgba(40, 35, 20, 0.95) !important;
 }
 
-/* Position ring around token HUD */
-.mgk-dir-n  { top: -45px !important; left: 50% !important; transform: translateX(-50%) !important; }
-.mgk-dir-s  { bottom: -45px !important; left: 50% !important; transform: translateX(-50%) !important; }
-.mgk-dir-w  { left: -45px !important; top: 50% !important; transform: translateY(-50%) !important; }
-.mgk-dir-e  { right: -45px !important; top: 50% !important; transform: translateY(-50%) !important; }
+/* Anchored to the expanded ring, so the gap above is what sets the distance. */
+.mgk-dir-n  { top: 0 !important; left: 50% !important; transform: translateX(-50%) !important; }
+.mgk-dir-s  { bottom: 0 !important; left: 50% !important; transform: translateX(-50%) !important; }
+.mgk-dir-w  { left: 0 !important; top: 50% !important; transform: translateY(-50%) !important; }
+.mgk-dir-e  { right: 0 !important; top: 50% !important; transform: translateY(-50%) !important; }
 
-.mgk-dir-nw { top: -45px !important; left: -45px !important; }
-.mgk-dir-ne { top: -45px !important; right: -45px !important; }
-.mgk-dir-sw { bottom: -45px !important; left: -45px !important; }
-.mgk-dir-se { bottom: -45px !important; right: -45px !important; }
+.mgk-dir-nw { top: 0 !important; left: 0 !important; }
+.mgk-dir-ne { top: 0 !important; right: 0 !important; }
+.mgk-dir-sw { bottom: 0 !important; left: 0 !important; }
+.mgk-dir-se { bottom: 0 !important; right: 0 !important; }
+
+/*
+ * Token against the edge of the screen: there is no room to clear the native
+ * columns, so those step aside for as long as the ring is up. Rotating is what
+ * the player asked for; elevation and config are one tap away afterwards.
+ */
+#token-hud:has(.mgk-dir-cramped) .col.left,
+#token-hud:has(.mgk-dir-cramped) .col.right {
+  opacity: 0.15;
+  pointer-events: none;
+}
 
 /* --------------------------------------------------------------------------
    Ruler Touch HUD (TouchVTT style vertical floating stack)

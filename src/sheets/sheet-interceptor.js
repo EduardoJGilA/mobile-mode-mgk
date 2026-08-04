@@ -20,7 +20,10 @@ export class SheetInterceptor {
 
     // Must strictly be an ActorSheet instance, not an ItemSheet, RollDialog, or HUD
     const name = app?.constructor?.name?.toLowerCase() ?? "";
-    const isActorSheet = app instanceof (globalThis.ActorSheet ?? class {})
+    // v13 moved ActorSheet under foundry.appv1; touching the global logs a
+    // deprecation warning on every sheet render.
+    const ActorSheetClass = foundry.appv1?.sheets?.ActorSheet ?? globalThis.ActorSheet;
+    const isActorSheet = app instanceof (ActorSheetClass ?? class {})
       || name.includes("actorsheet")
       || (app?.document?.documentName === "Actor" && (name.includes("sheet") || app?.options?.classes?.includes("sheet")));
 
