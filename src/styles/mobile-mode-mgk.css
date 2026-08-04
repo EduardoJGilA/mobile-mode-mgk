@@ -54,30 +54,13 @@
 
   --mgk-ease: cubic-bezier(0.2, 0.9, 0.3, 1);
 
-  /*
-   * How much of the screen the browser's own bottom bar is covering.
-   *
-   * `vh` measures the largest the viewport ever gets (bars hidden) while `dvh`
-   * tracks what is visible right now, so the difference is exactly the chrome
-   * in the way. Anything pinned with `bottom` needs this or it hides behind
-   * Brave's and Chrome's toolbars. Distinct from safe-area, which is the
-   * device's notch and gesture bar.
-   */
-  --mgk-browser-bottom: 0px;
   --mgk-safe-bottom: env(safe-area-inset-bottom, 0px);
   --mgk-safe-top: env(safe-area-inset-top, 0px);
   --mgk-safe-left: env(safe-area-inset-left, 0px);
   --mgk-safe-right: env(safe-area-inset-right, 0px);
 
   /* Height of the floating control column, used to keep overlays clear of it. */
-  --mgk-controls-clear: calc(24px + var(--mgk-safe-bottom) + var(--mgk-browser-bottom) + 48px + 14px);
-}
-
-/* Only browsers that understand dvh can report the bar; the rest keep 0. */
-@supports (height: 100dvh) {
-  :root {
-    --mgk-browser-bottom: calc(100vh - 100dvh);
-  }
+  --mgk-controls-clear: calc(24px + var(--mgk-safe-bottom) + 48px + 14px);
 }
 
 body.mobile-mode-mgk {
@@ -202,7 +185,7 @@ body.mobile-mode-mgk .dialog {
 body.mobile-mode-mgk #mgk-left-controls,
 body.mobile-mode-mgk #mgk-right-controls {
   position: fixed;
-  bottom: calc(24px + var(--mgk-safe-bottom) + var(--mgk-browser-bottom));
+  bottom: calc(24px + var(--mgk-safe-bottom));
   z-index: 900;
   display: flex;
   flex-direction: column;
@@ -257,7 +240,7 @@ body.mobile-mode-mgk #mgk-right-controls { right: calc(16px + var(--mgk-safe-rig
 
 body.mobile-mode-mgk #mgk-avatar-carousel {
   position: fixed;
-  bottom: calc(24px + var(--mgk-safe-bottom) + var(--mgk-browser-bottom));
+  bottom: calc(24px + var(--mgk-safe-bottom));
   left: 50%;
   transform: translateX(-50%);
   z-index: 850;
