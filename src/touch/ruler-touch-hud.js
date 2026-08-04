@@ -37,9 +37,11 @@ export class RulerTouchHud {
     Hooks.on("drawRuler", () => this.update());
     Hooks.on("destroyRuler", () => this.hide());
 
+    // Capture, because the gesture handler stops canvas pointer events at
+    // <body> and a bubbling listener would never see a finger on the map.
     window.addEventListener("pointermove", () => {
       if (this.isRulerMeasuring()) this.update();
-    });
+    }, { capture: true, passive: true });
     window.addEventListener("touchmove", () => {
       if (this.isRulerMeasuring()) this.update();
     }, { passive: true });

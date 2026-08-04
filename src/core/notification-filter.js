@@ -10,8 +10,17 @@
  * still gets through.
  */
 
-/** Keys Foundry has used for the low-resolution warning across versions. */
+/**
+ * Keys Foundry has used for the low-resolution warning across versions.
+ *
+ * v13 splits it into three cases (small screen, browser zoom, small window)
+ * and passes the key itself to `notify`, localizing it only afterwards — so
+ * the raw key is what the filter sees for those.
+ */
 const RESOLUTION_KEYS = [
+  "ERROR.RESOLUTION.Screen",
+  "ERROR.RESOLUTION.Scale",
+  "ERROR.RESOLUTION.Window",
   "ERROR.LowResolution",
   "ERROR.ResolutionTooLow",
   "WARNING.LowResolution"
@@ -21,8 +30,10 @@ const RESOLUTION_KEYS = [
 const RESOLUTION_PATTERNS = [
   /minimum supported resolution/i,
   /window is too small/i,
+  /requires (a screen resolution|usable window dimensions|a usable window)/i,
   /resoluci[oó]n m[ií]nima/i,
-  /ventana es demasiado peque/i
+  /ventana es demasiado peque/i,
+  /requiere (una resoluci[oó]n|unas dimensiones)/i
 ];
 
 export class NotificationFilter {
@@ -36,6 +47,8 @@ export class NotificationFilter {
 
     const isResolutionWarning = (message) => {
       if (typeof message !== "string") return false;
+      // v13 hands `notify` the untranslated key, so match that first.
+      if (RESOLUTION_KEYS.includes(message)) return true;
       if (phrases.some(phrase => message.includes(phrase))) return true;
       return RESOLUTION_PATTERNS.some(pattern => pattern.test(message));
     };

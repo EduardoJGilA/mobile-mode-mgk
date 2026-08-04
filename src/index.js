@@ -1,10 +1,13 @@
 import './styles/mobile-mode-mgk.css';
-import { MODULE_ID } from './core/utils.js';
+import { MODULE_ID, t } from './core/utils.js';
 import { DeviceDetector } from './core/device-detector.js';
 import { SocketUtil } from './core/socket-util.js';
 import { registerSettings } from './core/settings.js';
 import { NotificationFilter } from './core/notification-filter.js';
+import { WakeLock } from './core/wake-lock.js';
 import { TouchGestureHandler } from './touch/gesture-handler.js';
+import { TapFeedback } from './touch/tap-feedback.js';
+import { KeyboardInset } from './touch/keyboard-inset.js';
 import { WindowScaler } from './touch/window-scaler.js';
 import { QuickControls } from './ui/quick-controls.js';
 import { AvatarCarousel } from './ui/avatar-carousel.js';
@@ -60,6 +63,11 @@ Hooks.once("ready", () => {
 
   api.active = true;
   NotificationFilter.init();
+  enableSafeAreaInsets();
+  warnAboutInputConflicts();
+  if (game.settings.get(MODULE_ID, "touchFeedback")) TapFeedback.init();
+  if (game.settings.get(MODULE_ID, "keepScreenAwake")) WakeLock.init();
+  KeyboardInset.init();
   document.body.classList.add("mobile-mode-mgk");
   if (game.settings.get(MODULE_ID, "hideNativeUI")) document.body.classList.add("mgk-hide-native");
   if (DeviceDetector.isIOS()) document.body.classList.add("mgk-ios");
@@ -112,6 +120,39 @@ Hooks.on("canvasTearDown", () => {
   api.gestureHandler?.destroy();
   api.gestureHandler = null;
 });
+
+/**
+ * Warn about modules that also take over canvas touch input.
+ *
+ * They intercept pointer events higher up and stop them dead, so this module's
+ * gestures never fire and the canvas silently stops responding to the gestures
+ * configured here. Nothing is disabled automatically — which module should win
+ * is the user's call — but the reason has to be visible.
+ */
+function warnAboutInputConflicts() {
+  const rivals = ["touch-vtt"].filter(id => game.modules.get(id)?.active);
+  if (!rivals.length) return;
+
+  const names = rivals.map(id => game.modules.get(id)?.title ?? id).join(", ");
+  console.warn(
+    `Mobile Mode MGK | ${names} also handles canvas touch input and intercepts it first. `
+    + "The canvas gestures in this module will not run while it is active. Disable one of them."
+  );
+  ui.notifications?.warn(`${names}: ${t("Notifications.InputConflict", "another module is handling touch on the canvas.")}`);
+}
+
+/**
+ * Let the page reach under the notch and the gesture bar.
+ *
+ * Foundry ships a viewport meta without `viewport-fit=cover`, and without that
+ * every `env(safe-area-inset-*)` resolves to 0 — which silently disables all
+ * the --mgk-safe-* padding in the stylesheet.
+ */
+function enableSafeAreaInsets() {
+  const meta = document.querySelector('meta[name="viewport"]');
+  if (!meta || /viewport-fit/.test(meta.content)) return;
+  meta.content = `${meta.content}, viewport-fit=cover`;
+}
 
 function applyOrientationClass() {
   const landscape = window.innerWidth > window.innerHeight;

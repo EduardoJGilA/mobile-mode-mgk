@@ -75,6 +75,16 @@ body.mobile-mode-mgk {
 }
 
 body.mobile-mode-mgk.mgk-ios #interface,
+/*
+ * The canvas gestures run on pointer events, where preventDefault() no longer
+ * stops the browser from scrolling or zooming — that is decided up front by
+ * touch-action. Without this, panning the map drags the page instead.
+ */
+body.mobile-mode-mgk #board,
+body.mobile-mode-mgk #board canvas {
+  touch-action: none;
+}
+
 body.mobile-mode-mgk.mgk-ios #board {
   height: 100dvh;
 }
@@ -963,6 +973,56 @@ body.mgk-tablet .mgk-sheet-drawer.open { transform: translateX(0); }
 
 .mgk-vsn-cond.broken.active i {
   color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   Soft keyboard
+
+   KeyboardInset publishes the keyboard height as --mgk-kb. Full-screen drawers
+   are fixed to the layout viewport, which the keyboard does not shrink, so they
+   have to be lifted by hand or their lower half sits behind the keys.
+   -------------------------------------------------------------------------- */
+
+body.mgk-keyboard-open .mgk-sheet-drawer,
+body.mgk-keyboard-open .mgk-drawer-panel {
+  bottom: var(--mgk-kb, 0px);
+  transition: transform 0.3s var(--mgk-ease), bottom 0.2s ease-out;
+}
+
+/* Bottom-anchored furniture would otherwise ride on top of the keyboard. */
+body.mgk-keyboard-open #mgk-avatar-carousel {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   Touch press feedback
+
+   Applied by TapFeedback the instant a finger lands, well before any click.
+   The transition is deliberately near-instant on the way in and slower on the
+   way out: the press must feel like contact, the release like a rebound.
+   -------------------------------------------------------------------------- */
+
+.mobile-mode-mgk .mgk-pressed {
+  transform: scale(0.94);
+  filter: brightness(1.35);
+  transition: transform 40ms ease-out, filter 40ms ease-out;
+}
+
+/* Rows and wide bars sink instead of shrinking — scaling them looks rubbery. */
+.mobile-mode-mgk .mgk-row.mgk-pressed,
+.mobile-mode-mgk .mgk-nav-item.mgk-pressed,
+.mobile-mode-mgk .mgk-big-btn.mgk-pressed {
+  transform: scale(0.985) translateY(1px);
+}
+
+.mobile-mode-mgk :is(button, [data-action], .mgk-nav-item, .mgk-pill, .mgk-slot) {
+  transition: transform 140ms ease-out, filter 140ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-mode-mgk .mgk-pressed {
+    transform: none;
+  }
 }
 
 /* Bio & Notes fields */

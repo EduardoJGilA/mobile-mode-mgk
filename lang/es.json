@@ -15,6 +15,12 @@
       "hideQuickControlsHint": "Oculta los botones flotantes de control rápido.",
       "hideAvatarCarousel": "Ocultar carrusel de avatares",
       "hideAvatarCarouselHint": "Oculta el carrusel de avatares de personajes.",
+      "touchFeedback": "Respuesta táctil inmediata",
+      "touchFeedbackHint": "Los botones reaccionan al momento de tocarlos en vez de esperar el clic del navegador, que es lo que hace que una pantalla táctil se sienta como un mouse.",
+      "touchHaptics": "Vibración al tocar",
+      "touchHapticsHint": "Una vibración corta al presionar un control. Se ignora en dispositivos sin motor de vibración.",
+      "keepScreenAwake": "Mantener la pantalla encendida",
+      "keepScreenAwakeHint": "Evita que el celular se atenúe y se bloquee durante la partida. Se libera solo al cambiar de pestaña.",
       "enableCanvasFreeze": "Congelar lienzo por rendimiento",
       "enableCanvasFreezeHint": "Congela el renderizado del lienzo cuando está inactivo para ahorrar batería y evitar el sobrecalentamiento.",
       "sheetOnlyMode": "Modo solo ficha",
@@ -155,6 +161,7 @@
     },
     "Notifications": {
       "WallBlocked": "Movimiento bloqueado por un muro.",
+      "InputConflict": "Otro módulo está manejando el táctil en el lienzo, así que los gestos de aquí no funcionarán. Desactiva uno de los dos.",
       "HighVram": "Memoria de texturas alta: ~{mb}MB (límite {limit}MB). Los dispositivos móviles pueden recargar."
     }
   }

@@ -64,6 +64,29 @@ export function registerSettings() {
     }
   });
 
+  reg("touchFeedback", {
+    type: Boolean,
+    default: true,
+    onChange: () => window.location.reload()
+  });
+
+  reg("touchHaptics", {
+    type: Boolean,
+    default: true
+  });
+
+  reg("keepScreenAwake", {
+    type: Boolean,
+    default: true,
+    onChange: async (val) => {
+      const { WakeLock } = await import('./wake-lock.js');
+      if (!val) return WakeLock.release();
+      // init() is a no-op once it has run, so ask for the lock explicitly.
+      WakeLock.init();
+      WakeLock.request();
+    }
+  });
+
   reg("enableCanvasFreeze", {
     type: Boolean,
     default: true

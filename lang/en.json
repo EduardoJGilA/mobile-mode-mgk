@@ -15,6 +15,12 @@
       "hideQuickControlsHint": "Hides the floating quick control buttons.",
       "hideAvatarCarousel": "Hide Avatar Carousel",
       "hideAvatarCarouselHint": "Hides the character avatar carousel.",
+      "touchFeedback": "Instant Touch Response",
+      "touchFeedbackHint": "Buttons react the moment you touch them instead of waiting for the browser's click, which is what makes a touch screen feel like a mouse.",
+      "touchHaptics": "Vibration on Tap",
+      "touchHapticsHint": "A short buzz when a control is pressed. Ignored on devices without a vibration motor.",
+      "keepScreenAwake": "Keep Screen Awake",
+      "keepScreenAwakeHint": "Stops the phone from dimming and locking during play. Released automatically when you switch tabs.",
       "enableCanvasFreeze": "Canvas Performance Freeze",
       "enableCanvasFreezeHint": "Freezes canvas rendering when idle to save battery and prevent heating.",
       "sheetOnlyMode": "Sheet-Only Mode",
@@ -155,6 +161,7 @@
     },
     "Notifications": {
       "WallBlocked": "Movement blocked by a wall.",
+      "InputConflict": "Another module is handling touch on the canvas, so the gestures here will not run. Disable one of the two.",
       "HighVram": "High texture memory: ~{mb}MB (limit {limit}MB). Mobile devices may reload."
     }
   }
