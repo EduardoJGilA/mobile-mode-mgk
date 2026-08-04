@@ -144,11 +144,15 @@ export class TemplatePlacer {
     };
 
     // A new tap (re)positions the origin; dragging from it sets size and facing.
+    // Once the browser has committed to a scroll the event is no longer
+    // cancelable, and calling preventDefault only earns an console warning.
+    const stop = (ev) => { if (ev.cancelable) ev.preventDefault(); };
+
     this._onTouch = (ev) => {
       if (ev.touches?.length > 1) return;              // let two-finger pan through
       const point = pointOf(ev);
       if (!point) return;
-      ev.preventDefault();
+      stop(ev);
       this.destroyPreview();
       this.createPreview(point);
     };
@@ -157,7 +161,7 @@ export class TemplatePlacer {
       if (ev.touches?.length > 1 || !this.preview) return;
       const point = pointOf(ev);
       if (!point) return;
-      ev.preventDefault();
+      stop(ev);
       this.dragTo(point);
     };
 
