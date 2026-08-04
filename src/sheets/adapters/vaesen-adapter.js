@@ -1,5 +1,5 @@
 import { esc, t } from '../../core/utils.js';
-import { section, itemRow, empty } from '../components.js';
+import { section, itemRow, empty, bioField, bioGrid } from '../components.js';
 
 /**
  * Vaesen Adapter.
@@ -287,34 +287,24 @@ export class VaesenAdapter {
     const bio = data.actor.system?.bio ?? {};
     const notes = bio.note ?? bio.notes ?? data.actor.system?.notes ?? "";
 
-    const makeField = (labelKey, fallback, path, value, isTextarea = true) => {
-      const label = game.i18n.localize(labelKey) || fallback;
-      const val = esc(value ?? "");
-      return `
-        <div class="mgk-bio-field">
-          <label class="mgk-bio-label">${esc(label)}</label>
-          ${isTextarea
-            ? `<textarea class="mgk-bio-textarea" data-binding="${esc(path)}" rows="2">${val}</textarea>`
-            : `<input type="text" class="mgk-bio-input" data-binding="${esc(path)}" value="${val}">`
-          }
-        </div>`;
-    };
+    const makeField = (labelKey, fallback, path, value) =>
+      bioField(game.i18n.localize(labelKey) || fallback, path, value);
 
     const motivation = makeField("MOTIVATION", "Motivation", "system.bio.motivation", bio.motivation);
     const trauma = makeField("TRAUMA", "Trauma", "system.bio.trauma", bio.trauma);
     const darkSecret = makeField("DARK_SECRET", "Dark Secret", "system.bio.darkSecret", bio.darkSecret);
     const memento = makeField("MEMENTO", "Memento", "system.bio.memento", bio.memento);
     const advantage = makeField("ADVANTAGE", "Advantage", "system.bio.advantage", bio.advantage);
-    const noteField = makeField("NOTES", "Notes", "system.bio.note", notes, true);
+    const noteField = makeField("NOTES", "Notes", "system.bio.note", notes);
 
     const bioSection = section(
       game.i18n.localize("HEADER.MOTIVATION_MEMENTO") || "Motivation & Background",
-      `<div class="mgk-bio-grid">${motivation}${trauma}${darkSecret}${memento}${advantage}</div>`
+      bioGrid(`${motivation}${trauma}${darkSecret}${memento}${advantage}`)
     );
 
     const notesSection = section(
       game.i18n.localize("HEADER.NOTES") || "Notes",
-      `<div class="mgk-bio-grid">${noteField}</div>`
+      bioGrid(noteField)
     );
 
     return `<div class="mgk-tab">${bioSection}${notesSection}</div>`;

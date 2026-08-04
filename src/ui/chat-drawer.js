@@ -119,10 +119,9 @@ export class ChatDrawer {
 
   static async appendMessage(message, scroll = true) {
     const content = this.panel?.querySelector("#mgk-chat-content");
-    if (!content || !message.visible) return;
+    if (!content || message.visible === false) return;
 
-    const html = await message.renderHTML?.() ?? await message.getHTML?.();
-    const element = html instanceof HTMLElement ? html : html?.[0];
+    const element = await ChatStack.getMessageElement(message);
     if (!element) return;
 
     content.appendChild(element);

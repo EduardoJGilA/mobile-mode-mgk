@@ -20,6 +20,7 @@ export class SheetManager {
   static currentTab = null;
   static panel = null;
   static adapter = null;
+  static pendingRender = false;
 
   static init() {
     Hooks.on("mobileModeOpenSheet", (actor) => this.openSheet(actor));
@@ -61,6 +62,10 @@ export class SheetManager {
 
   static close() {
     HpWidget.close();
+    // Commit whatever the caret is sitting in before the drawer goes away.
+    this.saveBinding(document.activeElement);
+    document.activeElement?.blur?.();
+    this.pendingRender = false;
     this.panel?.classList.remove("open");
   }
 
@@ -112,12 +117,19 @@ export class SheetManager {
     // One delegated listener for every action any adapter emits.
     panel.querySelector("#mgk-sheet-body").addEventListener("click", (ev) => this.onAction(ev));
 
-    // Handle generic field bindings (e.g. bio/notes textareas)
-    panel.querySelector("#mgk-sheet-body").addEventListener("change", async (ev) => {
-      const input = ev.target.closest("[data-binding]");
-      if (!input || !this.currentActor) return;
-      const path = input.dataset.binding;
-      await this.currentActor.update({ [path]: input.value });
+    // Handle generic field bindings (e.g. bio/notes textareas).
+    // Inputs fire `change`; contenteditable boxes only settle on blur.
+    const body = panel.querySelector("#mgk-sheet-body");
+    body.addEventListener("change", (ev) => this.saveBinding(ev.target));
+    body.addEventListener("focusout", (ev) => {
+      this.saveBinding(ev.target);
+      // `relatedTarget` is unreliable on mobile keyboards, so let focus land
+      // first and only redraw once the user has left every editable field.
+      setTimeout(() => {
+        if (!this.pendingRender || this.isEditing()) return;
+        this.pendingRender = false;
+        this.renderContent();
+      }, 0);
     });
 
     this.attachSwipe(panel);
@@ -149,8 +161,34 @@ export class SheetManager {
     if (next) this.selectTab(next.id);
   }
 
+  /** True while the caret sits in one of the tab's bound fields. */
+  static isEditing() {
+    return !!document.activeElement?.closest?.("#mgk-sheet-body [data-binding]");
+  }
+
+  /** Persist a bound field. Contenteditable boxes carry HTML, inputs a value. */
+  static async saveBinding(target) {
+    const input = target?.closest?.("#mgk-sheet-body [data-binding]");
+    if (!input || !this.currentActor) return;
+
+    const path = input.dataset.binding;
+    const value = input.dataset.bindingHtml ? input.innerHTML : input.value;
+    const current = foundry.utils.getProperty(this.currentActor, path) ?? "";
+
+    // Skip no-op writes: each update re-renders the tab.
+    if (String(current) === value) return;
+    await this.currentActor.update({ [path]: value });
+  }
+
   static renderContent() {
     if (!this.panel || !this.currentActor) return;
+
+    // Never redraw under an open keyboard — it would drop what is being typed.
+    if (this.isEditing()) {
+      this.pendingRender = true;
+      return;
+    }
+
     const data = this.adapter.getCharacterData(this.currentActor);
 
     this.panel.querySelector("#mgk-sheet-name").textContent = data.name;
@@ -290,7 +328,8 @@ export class SheetManager {
     let tracking = false;
 
     body.addEventListener("touchstart", (ev) => {
-      tracking = ev.touches.length === 1 && !ev.target.closest("button, input, a, .mgk-row-detail");
+      tracking = ev.touches.length === 1
+        && !ev.target.closest("button, input, textarea, a, [contenteditable], .mgk-row-detail");
       if (!tracking) return;
       startX = ev.touches[0].clientX;
       startY = ev.touches[0].clientY;

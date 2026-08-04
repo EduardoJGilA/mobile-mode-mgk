@@ -76,6 +76,34 @@ export function pips(value, max) {
   return `<span class="mgk-pips">${html}</span>`;
 }
 
+/**
+ * An editable sheet field bound to a document path.
+ *
+ * `type` picks the control: `text` for short scalars, `textarea` for plain
+ * multi-line strings, and `html` for fields the system stores as enriched
+ * markup — those get a contenteditable box so the user edits the rendered
+ * text instead of raw tags. SheetManager saves both on change and on blur.
+ */
+export function bioField(label, path, value, type = "textarea") {
+  const control = type === "text"
+    ? `<input type="text" class="mgk-bio-input" data-binding="${esc(path)}" value="${esc(value ?? "")}">`
+    : type === "html"
+      ? `<div class="mgk-bio-rich" data-binding="${esc(path)}" data-binding-html="1" contenteditable="true">${value ?? ""}</div>`
+      : `<textarea class="mgk-bio-textarea" data-binding="${esc(path)}" rows="2">${esc(value ?? "")}</textarea>`;
+
+  return `
+    <div class="mgk-bio-field">
+      <label class="mgk-bio-label">${esc(label)}</label>
+      ${control}
+    </div>
+  `;
+}
+
+/** Stack of bio fields. `columns` pairs up short inputs to save vertical space. */
+export function bioGrid(fieldsHtml, { columns = false } = {}) {
+  return `<div class="mgk-bio-grid${columns ? " cols" : ""}">${fieldsHtml}</div>`;
+}
+
 export function empty(message) {
   return `<div class="mgk-empty">${esc(message ?? t("Sheets.Empty", "Nothing here."))}</div>`;
 }

@@ -1,4 +1,5 @@
 import { esc, t } from '../core/utils.js';
+import { ChatDrawer } from './chat-drawer.js';
 
 const HISTORY = 40;
 
@@ -16,11 +17,18 @@ export class ChatStack {
 
   static init() {
     Hooks.on("createChatMessage", (message) => this.push(message));
+    Hooks.on("updateChatMessage", (message) => this.onUpdate(message));
     Hooks.on("deleteChatMessage", (message) => {
       this.messages = this.messages.filter(m => m.id !== message.id);
       if (!this.messages.length) return this.hide();
       this.index = Math.min(this.index, this.messages.length - 1);
       this.renderCard();
+    });
+    Hooks.on("diceSoNiceRollComplete", (messageId) => {
+      const idx = this.messages.findIndex(m => m.id === messageId);
+      if (idx !== -1) {
+        if (this.index === idx) this.renderCard();
+      }
     });
     Hooks.on("mobileModeCloseStack", () => this.hide());
     Hooks.on("mobileModeToggleChat", () => {
@@ -33,22 +41,50 @@ export class ChatStack {
   }
 
   static push(message) {
-    if (!message.visible) return;
-    this.messages.push(message);
-    while (this.messages.length > HISTORY) this.messages.shift();
-    // A new roll always wins: show it rather than whatever was being read.
-    this.index = this.messages.length - 1;
+    if (message.visible === false) return;
+    const existingIdx = this.messages.findIndex(m => m.id === message.id);
+    if (existingIdx !== -1) {
+      this.messages[existingIdx] = message;
+      this.index = existingIdx;
+    } else {
+      this.messages.push(message);
+      while (this.messages.length > HISTORY) this.messages.shift();
+      this.index = this.messages.length - 1;
+    }
     this.show();
+    if (ChatDrawer.unread > 0) {
+      ChatDrawer.unread = 0;
+      ChatDrawer.updateBadge();
+    }
+
+    // Schedule re-renders so when 3D dice (DiceSoNice) or system calculations finish,
+    // the card automatically updates to show the full roll card without manual clicking
+    setTimeout(() => { if (this.visible) this.renderCard(); }, 300);
+    setTimeout(() => { if (this.visible) this.renderCard(); }, 1000);
+    setTimeout(() => { if (this.visible) this.renderCard(); }, 2500);
+  }
+
+  static onUpdate(message) {
+    const idx = this.messages.findIndex(m => m.id === message.id);
+    if (idx !== -1) {
+      this.messages[idx] = message;
+      if (this.index === idx) this.renderCard();
+    } else {
+      this.push(message);
+    }
   }
 
   /** Seed from existing history the first time the stack is opened manually. */
   static seed() {
     if (this.messages.length) return;
-    this.messages = game.messages.contents.filter(m => m.visible).slice(-HISTORY);
-    this.index = this.messages.length - 1;
+    this.messages = game.messages.contents.filter(m => m.visible !== false).slice(-HISTORY);
+    this.index = Math.max(0, this.messages.length - 1);
   }
 
+  static _shownAt = 0;
+
   static show() {
+    this._shownAt = Date.now();
     if (!this.el) this.el = this.create();
     this.renderCard();
     this.el.classList.add("open");
@@ -57,7 +93,7 @@ export class ChatStack {
     // Close when tapping outside the card (e.g. on the map or background)
     setTimeout(() => {
       document.addEventListener("pointerdown", this._onOutsideClick, { capture: true });
-    }, 50);
+    }, 100);
   }
 
   static hide() {
@@ -68,6 +104,7 @@ export class ChatStack {
 
   static _onOutsideClick = (ev) => {
     if (!this.visible) return;
+    if (Date.now() - this._shownAt < 450) return;
     const target = ev.target;
     if (this.el?.contains(target)) return;
     if (target.closest("#mgk-right-controls, #mgk-left-controls, #mgk-sheet-drawer")) return;
@@ -188,6 +225,30 @@ export class ChatStack {
     if (label) label.textContent = `${this.index + 1} / ${this.messages.length}`;
   }
 
+  static async getMessageElement(message) {
+    if (!message) return null;
+    try {
+      let html = null;
+      if (typeof message.renderHTML === "function") {
+        html = await message.renderHTML();
+      } else if (typeof message.getHTML === "function") {
+        html = await message.getHTML();
+      }
+      if (!html) return null;
+      if (html instanceof HTMLElement) return html;
+      if (typeof html === "string") {
+        const temp = document.createElement("div");
+        temp.innerHTML = html.trim();
+        return temp.firstElementChild || temp;
+      }
+      if (html[0] instanceof HTMLElement) return html[0];
+      if (typeof html.get === "function" && html.get(0) instanceof HTMLElement) return html.get(0);
+    } catch (err) {
+      console.warn("Mobile Mode MGK | Error rendering chat message element", err);
+    }
+    return null;
+  }
+
   static _renderToken = 0;
 
   static async renderCard() {
@@ -206,15 +267,16 @@ export class ChatStack {
 
     if (!message) return (card.innerHTML = "");
 
-    // Rendering is async, so a fast tapper can have several in flight at once.
-    // Only the newest one is allowed to write into the card.
     const token = ++this._renderToken;
-    const html = await (message.renderHTML?.() ?? message.getHTML?.());
+    const element = await this.getMessageElement(message);
     if (token !== this._renderToken) return;
 
-    const element = html instanceof HTMLElement ? html : html?.[0];
     card.innerHTML = "";
-    if (element) card.appendChild(element);
+    if (element) {
+      card.appendChild(element);
+    } else {
+      card.innerHTML = `<div class="mgk-empty">${esc(t("Chat.CannotRender", "Cannot render message"))}</div>`;
+    }
     card.scrollTop = 0;
   }
 }

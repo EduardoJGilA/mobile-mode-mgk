@@ -71,8 +71,8 @@ Hooks.once("ready", () => {
   if (!game.settings.get(MODULE_ID, "hideQuickControls")) QuickControls.render();
   if (!game.settings.get(MODULE_ID, "hideAvatarCarousel")) AvatarCarousel.init();
 
-  ChatDrawer.init();
   ChatStack.init();
+  ChatDrawer.init();
   MacroHotbar.init();
   SheetManager.init();
   SheetInterceptor.init();

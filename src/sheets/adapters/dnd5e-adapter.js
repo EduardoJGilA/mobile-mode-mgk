@@ -1,5 +1,5 @@
 import { esc, t, signed } from '../../core/utils.js';
-import { section, itemRow, statBox, pips, empty } from '../components.js';
+import { section, itemRow, statBox, pips, empty, bioField, bioGrid } from '../components.js';
 
 const PHYSICAL_TYPES = ["weapon", "equipment", "consumable", "tool", "loot", "container"];
 
@@ -16,6 +16,7 @@ export class DnD5eAdapter {
     { id: "Features", label: "Features" },
     { id: "Spells", label: "Spells" },
     { id: "Effects", label: "Effects" },
+    { id: "Notes", label: "Notes" },
     { id: "Other", label: "Other" }
   ];
 
@@ -56,6 +57,7 @@ export class DnD5eAdapter {
       currency: system.currency ?? {},
       encumbrance: system.attributes?.encumbrance ?? null,
       spellSlots: this.getSpellSlots(system),
+      details: system.details ?? {},
       senses: system.attributes?.senses ?? {},
       resources: system.resources ?? {},
       weapons: actor.itemTypes?.weapon ?? [],
@@ -331,6 +333,80 @@ export class DnD5eAdapter {
       <div class="mgk-tab">
         ${section(t("Sheets.Conditions", "Conditions"), `<div class="mgk-status-grid">${grid}</div>`)}
         ${section(t("Sheets.ActiveEffects", "Active Effects"), effects || empty(), { count: data.effects.length })}
+      </div>
+    `;
+  }
+
+  /** Short scalar details, in sheet order. */
+  static NOTE_DETAILS = [
+    ["alignment", "DND5E.Alignment", "Alignment"],
+    ["gender", "DND5E.Gender", "Gender"],
+    ["age", "DND5E.Age", "Age"],
+    ["height", "DND5E.Height", "Height"],
+    ["weight", "DND5E.Weight", "Weight"],
+    ["eyes", "DND5E.Eyes", "Eyes"],
+    ["skin", "DND5E.Skin", "Skin"],
+    ["hair", "DND5E.Hair", "Hair"],
+    ["faith", "DND5E.Faith", "Faith"]
+  ];
+
+  /** Long-form details the system stores as enriched HTML. */
+  static NOTE_PROSE = [
+    ["appearance", "DND5E.Appearance", "Appearance"],
+    ["trait", "DND5E.PersonalityTraits", "Personality Traits"],
+    ["ideal", "DND5E.Ideals", "Ideals"],
+    ["bond", "DND5E.Bonds", "Bonds"],
+    ["flaw", "DND5E.Flaws", "Flaws"]
+  ];
+
+  /** Detail scalars are strings in most versions but numbers in a few. */
+  static str(value) {
+    if (value === null || value === undefined) return "";
+    if (typeof value === "object") return value.value ?? value.name ?? "";
+    return String(value);
+  }
+
+  /** Prefer the system's own translation, so labels match the native sheet. */
+  static label(systemKey, fallback) {
+    const out = game.i18n.localize(systemKey);
+    return out === systemKey ? fallback : out;
+  }
+
+  static renderNotes(data) {
+    const details = data.details ?? {};
+    const biography = details.biography ?? {};
+
+    // NPCs and vehicles carry a narrower schema than characters, so only offer
+    // the fields their data model actually defines.
+    const scalars = this.NOTE_DETAILS
+      .filter(([key]) => key in details)
+      .map(([key, i18n, fallback]) =>
+        bioField(this.label(i18n, fallback), `system.details.${key}`, this.str(details[key]), "text"))
+      .join("");
+
+    const prose = this.NOTE_PROSE
+      .filter(([key]) => key in details)
+      .map(([key, i18n, fallback]) =>
+        bioField(this.label(i18n, fallback), `system.details.${key}`, details[key] ?? "", "html"))
+      .join("");
+
+    const notes = [
+      ["value", "DND5E.Biography", "Biography"],
+      ["public", "DND5E.PublicBiography", "Public Biography"]
+    ]
+      .filter(([key]) => key in biography)
+      .map(([key, i18n, fallback]) =>
+        bioField(this.label(i18n, fallback), `system.details.biography.${key}`, biography[key] ?? "", "html"))
+      .join("");
+
+    const block = (title, fields, options) => (fields ? section(title, bioGrid(fields, options)) : "");
+
+    return `
+      <div class="mgk-tab">
+        ${block(this.label("DND5E.CharacterDetails", t("Sheets.Details", "Details")), scalars, { columns: true })}
+        ${block(this.label("DND5E.PersonalityTraits", t("Sheets.Personality", "Personality")), prose)}
+        ${block(this.label("DND5E.Biography", t("Sheets.Notes", "Notes")), notes)}
+        ${scalars || prose || notes ? "" : empty(t("Sheets.Empty", "Nothing here."))}
       </div>
     `;
   }

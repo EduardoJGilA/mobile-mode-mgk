@@ -973,10 +973,18 @@ body.mgk-tablet .mgk-sheet-drawer.open { transform: translateX(0); }
   padding: 4px 0;
 }
 
+/* Short scalars pair up so nine of them do not eat the whole screen. */
+.mgk-bio-grid.cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 10px;
+}
+
 .mgk-bio-field {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
 .mgk-bio-label {
@@ -988,7 +996,8 @@ body.mgk-tablet .mgk-sheet-drawer.open { transform: translateX(0); }
 }
 
 .mgk-bio-input,
-.mgk-bio-textarea {
+.mgk-bio-textarea,
+.mgk-bio-rich {
   background: var(--mgk-ink);
   border: 1px solid var(--mgk-edge);
   color: var(--mgk-bone);
@@ -1002,9 +1011,45 @@ body.mgk-tablet .mgk-sheet-drawer.open { transform: translateX(0); }
 }
 
 .mgk-bio-input:focus,
-.mgk-bio-textarea:focus {
+.mgk-bio-textarea:focus,
+.mgk-bio-rich:focus {
   border-color: var(--mgk-brass);
   outline: none;
+}
+
+/* Rich fields hold system HTML: keep it inside the drawer, never sideways. */
+.mgk-bio-rich {
+  min-height: 72px;
+  max-height: 40vh;
+  overflow-y: auto;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.mgk-bio-rich :is(p, ul, ol, h1, h2, h3, h4) {
+  margin: 0 0 6px;
+}
+
+.mgk-bio-rich :is(p, ul, ol):last-child {
+  margin-bottom: 0;
+}
+
+.mgk-bio-rich :is(h1, h2, h3, h4) {
+  font-size: 0.95rem;
+  border: none;
+}
+
+.mgk-bio-rich :is(img, table) {
+  max-width: 100%;
+  height: auto;
+}
+
+.mgk-bio-rich table {
+  display: block;
+  overflow-x: auto;
 }
 
 /* --------------------------------------------------------------------------
@@ -1342,10 +1387,9 @@ body.mgk-placing-template #mgk-right-controls { display: none; }
 .mgk-chat-stack {
   position: fixed;
   left: 50%;
-  /* Sits above the floating controls by construction, so a roll is always
-     one tap away even while a message is on screen. */
+  /* Sits above drawers and floating controls so a roll card is always displayed live on screen */
   bottom: var(--mgk-controls-clear);
-  z-index: 880;
+  z-index: 1050;
   width: min(440px, calc(100vw - 24px));
   max-height: 40vh;
   display: flex;
