@@ -2,7 +2,7 @@
   "id": "mobile-mode-mgk",
   "title": "Mobile Mode MGK",
   "description": "Mobile-friendly interface for Foundry VTT with touch controls, optimized drawer character sheets, chat drawer, and performance tools.",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "url": "https://github.com/EduardoJGilA/mobile-mode-mgk",
   "manifest": "https://github.com/EduardoJGilA/mobile-mode-mgk/releases/latest/download/module.json",
   "download": "https://github.com/EduardoJGilA/mobile-mode-mgk/releases/latest/download/module.zip",
