@@ -25,7 +25,13 @@ export function section(title, contentHtml, { count = null, open = true } = {}) 
  * `id` is emitted as data-item-id so the delegated handler can resolve it.
  */
 export function itemRow({ id, img, name, subtitle = "", chips = [], action = "use-item", actionLabel = "", expandable = true }) {
-  const chipHtml = chips.filter(Boolean).map(c => `<span class="mgk-chip">${esc(c)}</span>`).join("");
+  const chipHtml = chips.filter(Boolean).map(c => {
+    if (typeof c === "object" && c.label) {
+      const cls = c.cls ? ` ${esc(c.cls)}` : "";
+      return `<span class="mgk-chip${cls}">${esc(c.label)}</span>`;
+    }
+    return `<span class="mgk-chip">${esc(c)}</span>`;
+  }).join("");
   return `
     <div class="mgk-row" data-item-id="${esc(id)}">
       <div class="mgk-row-main" data-action="${expandable ? "expand" : action}" data-item-id="${esc(id)}">

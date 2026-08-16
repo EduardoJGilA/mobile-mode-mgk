@@ -757,6 +757,37 @@ body.mgk-tablet .mgk-sheet-drawer.open { transform: translateX(0); }
 }
 
 .mgk-chip.tappable { color: var(--mgk-brass); cursor: pointer; }
+.mgk-chip.conc {
+  background: rgba(193, 90, 62, 0.2);
+  color: #e57352;
+  border: 1px solid rgba(193, 90, 62, 0.5);
+  font-weight: 700;
+  padding: 3px 6px;
+}
+.mgk-chip.ritual {
+  background: rgba(90, 169, 141, 0.2);
+  color: var(--mgk-patina);
+  border: 1px solid rgba(90, 169, 141, 0.5);
+  font-weight: 700;
+  padding: 3px 6px;
+}
+.mgk-chip.cast-time {
+  color: var(--mgk-brass);
+  font-size: 0.65rem;
+  text-transform: capitalize;
+}
+.mgk-chip.uses {
+  color: var(--mgk-bone);
+  background: var(--mgk-slate);
+  border: 1px solid var(--mgk-edge);
+  font-weight: 700;
+}
+.mgk-chip.unprepared {
+  color: var(--mgk-ash);
+  opacity: 0.65;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+}
 
 .mgk-row-action {
   background: transparent;

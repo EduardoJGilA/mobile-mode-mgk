@@ -118,6 +118,59 @@ export class DnD5eAdapter {
     return CONFIG.DND5E?.spellLevels?.[level] ?? `Level ${level}`;
   }
 
+  static spellSubtitle(spell) {
+    const labels = spell.labels ?? {};
+    const school = labels.school ?? CONFIG.DND5E?.spellSchools?.[spell.system?.school]?.label ?? CONFIG.DND5E?.spellSchools?.[spell.system?.school] ?? "";
+    const vsm = labels.components?.vsm ?? "";
+    const range = labels.range ?? (spell.system?.range?.value ? `${spell.system.range.value} ${spell.system.range.units ?? "ft"}` : spell.system?.range?.units ?? "");
+    return [school, vsm, range].filter(Boolean).join(" · ");
+  }
+
+  static spellChips(spell) {
+    const labels = spell.labels ?? {};
+    const props = spell.system?.properties;
+    const isConc = (props instanceof Set ? props.has("concentration") : Array.isArray(props) ? props.includes("concentration") : false)
+      || labels.components?.concentration || spell.system?.components?.concentration || false;
+    const isRitual = (props instanceof Set ? props.has("ritual") : Array.isArray(props) ? props.includes("ritual") : false)
+      || labels.components?.ritual || spell.system?.components?.ritual || false;
+
+    const chips = [];
+
+    // Preparation status (for standard prepared mode)
+    if (!this.isPrepared(spell)) {
+      chips.push({ label: t("Sheets.Unprepared", "unprepared"), cls: "unprepared" });
+    }
+
+    // Limited uses (e.g. 1/1)
+    const uses = spell.system?.uses;
+    if (uses?.max) {
+      chips.push({ label: `${uses.value ?? 0}/${uses.max}`, cls: "uses" });
+    }
+
+    // Concentration badge
+    if (isConc) {
+      chips.push({ label: "C", cls: "conc" });
+    }
+
+    // Ritual badge
+    if (isRitual) {
+      chips.push({ label: "R", cls: "ritual" });
+    }
+
+    // Activation / Cast Time (e.g. Action, Bonus, Reaction)
+    const act = labels.activation || spell.system?.activation?.type;
+    if (act) {
+      chips.push({ label: act, cls: "cast-time" });
+    }
+
+    // Damage or Save
+    const damage = labels.damage ?? (Array.isArray(labels.damages) ? labels.damages[0]?.formula : null);
+    if (damage) chips.push(damage);
+    else if (labels.save) chips.push(`DC ${labels.save}`);
+
+    return chips;
+  }
+
   /** Best-effort attack/damage labels across 4.x and 5.x. */
   static itemChips(item) {
     const labels = item.labels ?? {};
@@ -212,11 +265,14 @@ export class DnD5eAdapter {
         <div class="mgk-actions-row">${quickActions}</div>
         ${section(t("Sheets.Weapons", "Weapons"), weapons || empty(), { count: data.weapons.length })}
         ${section(t("Sheets.Cantrip", "Cantrips"), cantrips.map(s => itemRow({
-          id: s.id, img: s.img, name: s.name, chips: this.itemChips(s), actionLabel: ""
+          id: s.id, img: s.img, name: s.name,
+          subtitle: this.spellSubtitle(s),
+          chips: this.spellChips(s), actionLabel: ""
         })).join("") || empty(), { count: cantrips.length })}
         ${section(t("Sheets.PreparedSpells", "Prepared Spells"), leveled.map(s => itemRow({
           id: s.id, img: s.img, name: s.name,
-          subtitle: this.levelLabel(s.system.level), chips: this.itemChips(s)
+          subtitle: `${this.levelLabel(s.system.level)} · ${this.spellSubtitle(s)}`,
+          chips: this.spellChips(s)
         })).join("") || empty(), { count: leveled.length })}
         ${section(t("Sheets.Features", "Features"), activeFeats.map(f => itemRow({
           id: f.id, img: f.img, name: f.name, chips: this.itemChips(f)
@@ -289,34 +345,89 @@ export class DnD5eAdapter {
   static renderSpells(data) {
     if (!data.spells.length) return `<div class="mgk-tab">${empty(t("Sheets.NoSpells", "No spells."))}</div>`;
 
+    // Categorize spells by preparation mode & level
+    const innate = [];
+    const atwill = [];
+    const pact = [];
+    const ritual = [];
     const byLevel = new Map();
+
     for (const spell of data.spells) {
-      const level = spell.system?.level ?? 0;
-      if (!byLevel.has(level)) byLevel.set(level, []);
-      byLevel.get(level).push(spell);
+      const mode = spell.system?.preparation?.mode ?? "prepared";
+      if (mode === "innate") {
+        innate.push(spell);
+      } else if (mode === "atwill") {
+        atwill.push(spell);
+      } else if (mode === "pact") {
+        pact.push(spell);
+      } else if (mode === "ritual") {
+        ritual.push(spell);
+      } else {
+        const level = spell.system?.level ?? 0;
+        if (!byLevel.has(level)) byLevel.set(level, []);
+        byLevel.get(level).push(spell);
+      }
     }
 
     const slotFor = (level) => data.spellSlots.find(s => s.level === level && !s.isPact)
       ?? (level > 0 ? data.spellSlots.find(s => s.level === level) : null);
 
-    const sections = [...byLevel.keys()].sort((a, b) => a - b).map(level => {
-      const slot = slotFor(level);
+    const renderSpellGroup = (title, spells, slot = null) => {
+      if (!spells.length && !slot) return "";
       const tracker = slot ? slotTracker(slot) : "";
-      const header = `<span>${esc(this.levelLabel(level))}</span>${tracker}`;
-      const rows = byLevel.get(level).map(s => itemRow({
+      const count = spells.length ? ` <span class="mgk-count">(${spells.length})</span>` : "";
+      const header = `<span>${esc(title)}${count}</span>${tracker}`;
+      const rows = spells.map(s => itemRow({
         id: s.id, img: s.img, name: s.name,
-        subtitle: [s.labels?.components?.vsm, s.labels?.school].filter(Boolean).join(" · "),
-        chips: [this.isPrepared(s) ? null : t("Sheets.Unprepared", "unprepared"), ...this.itemChips(s)]
+        subtitle: this.spellSubtitle(s),
+        chips: this.spellChips(s)
       })).join("");
       return `
         <details class="mgk-section" open>
           <summary class="mgk-section-title">${header}<i class="fas fa-chevron-down"></i></summary>
-          <div class="mgk-section-body">${rows}</div>
+          <div class="mgk-section-body">${rows || empty(t("Sheets.NoSpells", "No spells."))}</div>
         </details>
       `;
-    }).join("");
+    };
 
-    return `<div class="mgk-tab">${sections}</div>`;
+    const htmlParts = [];
+
+    // 1. Innate Spellcasting
+    if (innate.length) {
+      htmlParts.push(renderSpellGroup(t("Sheets.InnateSpells", "Innate Spellcasting"), innate));
+    }
+
+    // 2. At-Will Spells
+    if (atwill.length) {
+      htmlParts.push(renderSpellGroup(t("Sheets.AtWillSpells", "At-Will Spells"), atwill));
+    }
+
+    // 3. Cantrips (Level 0)
+    const cantrips = byLevel.get(0) ?? [];
+    if (cantrips.length) {
+      htmlParts.push(renderSpellGroup(this.levelLabel(0), cantrips));
+    }
+
+    // 4. Pact Magic
+    const pactSlot = data.spellSlots.find(s => s.isPact);
+    if (pact.length || pactSlot) {
+      htmlParts.push(renderSpellGroup(t("Sheets.PactMagic", "Pact Magic"), pact, pactSlot));
+    }
+
+    // 5. Ritual-only spells
+    if (ritual.length) {
+      htmlParts.push(renderSpellGroup(t("Sheets.RitualSpells", "Rituals"), ritual));
+    }
+
+    // 6. Leveled Spells (1st Level, 2nd Level...)
+    const leveledKeys = [...byLevel.keys()].filter(lvl => lvl > 0).sort((a, b) => a - b);
+    for (const level of leveledKeys) {
+      const spells = byLevel.get(level) ?? [];
+      const slot = slotFor(level);
+      htmlParts.push(renderSpellGroup(this.levelLabel(level), spells, slot));
+    }
+
+    return `<div class="mgk-tab">${htmlParts.join("")}</div>`;
   }
 
   static renderEffects(data) {

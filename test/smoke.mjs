@@ -64,8 +64,9 @@ const NASTY = `O'Brien "the <b>Bold</b>" & <script>alert(1)</script>`;
 
 const items = [
   makeItem({ id: "w1", name: NASTY, type: "weapon" }),
-  makeItem({ id: "s1", name: "Booming Blade", type: "spell", system: { level: 0, preparation: { prepared: true }, description: { value: "" } } }),
-  makeItem({ id: "s2", name: "Thunderwave", type: "spell", system: { level: 1, preparation: { prepared: true }, description: { value: "" } } }),
+  makeItem({ id: "s1", name: "Booming Blade", type: "spell", labels: { school: "Evocation", activation: "Action", components: { vsm: "V, M" } }, system: { level: 0, preparation: { prepared: true }, description: { value: "" } } }),
+  makeItem({ id: "s2", name: "Thunderwave", type: "spell", labels: { school: "Evocation", activation: "Action", range: "Self", damage: "2d8 Thunder" }, system: { level: 1, preparation: { prepared: true }, description: { value: "" } } }),
+  makeItem({ id: "s3", name: "Suggestion", type: "spell", labels: { school: "Enchantment", activation: "Action", range: "30 ft", components: { vsm: "V, M", concentration: true } }, system: { level: 2, preparation: { mode: "innate" }, uses: { value: 1, max: 1 }, properties: new Set(["concentration"]), description: { value: "" } } }),
   makeItem({ id: "e1", name: "Shield", type: "equipment" }),
   makeItem({ id: "f1", name: "Second Wind", type: "feat", system: { uses: { value: 2, max: 2 }, activation: { type: "bonus" }, description: { value: "" } } })
 ];
@@ -183,10 +184,14 @@ await check("hostile item name is escaped everywhere it appears", () => {
   assert.ok(seen > 0, "the hostile name never rendered, so nothing was actually tested");
 });
 
-await check("spell tab groups by level and shows numeric slot tracker", () => {
+await check("spell tab groups by category and shows rich metadata (innate, school, concentration, slots)", () => {
   const html = DnD5eAdapter.renderTab("Spells", data);
   assert.ok(html.includes("Cantrip"), "missing cantrip group");
   assert.ok(html.includes("1st Level"), "missing level 1 group");
+  assert.ok(html.includes("Innate Spellcasting"), "missing innate group");
+  assert.ok(html.includes("Suggestion"), "missing innate spell name");
+  assert.ok(html.includes("mgk-chip conc"), "missing concentration chip");
+  assert.ok(html.includes("1/1"), "missing innate uses chip");
   assert.ok(html.includes("mgk-slot-tracker"), "missing slot tracker");
   assert.ok(html.includes("mgk-slot-step"), "missing slot step buttons");
   assert.ok(html.includes("mgk-slot-val"), "missing slot value");
