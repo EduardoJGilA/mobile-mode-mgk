@@ -54,6 +54,11 @@ export function registerSettings() {
     }
   });
 
+  reg("enableChatStack", {
+    type: Boolean,
+    default: true
+  });
+
   reg("sheetOnlyMode", {
     type: Boolean,
     default: false,

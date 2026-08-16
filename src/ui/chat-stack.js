@@ -1,4 +1,4 @@
-import { esc, t } from '../core/utils.js';
+import { MODULE_ID, esc, t } from '../core/utils.js';
 import { ChatDrawer } from './chat-drawer.js';
 
 const HISTORY = 40;
@@ -51,17 +51,27 @@ export class ChatStack {
       while (this.messages.length > HISTORY) this.messages.shift();
       this.index = this.messages.length - 1;
     }
-    this.show();
-    if (ChatDrawer.unread > 0) {
-      ChatDrawer.unread = 0;
-      ChatDrawer.updateBadge();
+
+    let enableFloating = true;
+    try {
+      enableFloating = game.settings?.get(MODULE_ID, "enableChatStack") ?? true;
+    } catch {
+      enableFloating = true;
     }
 
-    // Schedule re-renders so when 3D dice (DiceSoNice) or system calculations finish,
-    // the card automatically updates to show the full roll card without manual clicking
-    setTimeout(() => { if (this.visible) this.renderCard(); }, 300);
-    setTimeout(() => { if (this.visible) this.renderCard(); }, 1000);
-    setTimeout(() => { if (this.visible) this.renderCard(); }, 2500);
+    if (enableFloating) {
+      this.show();
+      if (ChatDrawer.unread > 0) {
+        ChatDrawer.unread = 0;
+        ChatDrawer.updateBadge();
+      }
+
+      // Schedule re-renders so when 3D dice (DiceSoNice) or system calculations finish,
+      // the card automatically updates to show the full roll card without manual clicking
+      setTimeout(() => { if (this.visible) this.renderCard(); }, 300);
+      setTimeout(() => { if (this.visible) this.renderCard(); }, 1000);
+      setTimeout(() => { if (this.visible) this.renderCard(); }, 2500);
+    }
   }
 
   static onUpdate(message) {

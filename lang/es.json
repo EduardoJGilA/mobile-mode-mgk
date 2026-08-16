@@ -15,6 +15,8 @@
       "hideQuickControlsHint": "Oculta los botones flotantes de control rápido.",
       "hideAvatarCarousel": "Ocultar carrusel de avatares",
       "hideAvatarCarouselHint": "Oculta el carrusel de avatares de personajes.",
+      "enableChatStack": "Tarjeta flotante de tiradas y mensajes",
+      "enableChatStackHint": "Muestra automáticamente una tarjeta flotante en la pantalla al recibir un nuevo mensaje o tirada de dados.",
       "touchFeedback": "Respuesta táctil inmediata",
       "touchFeedbackHint": "Los botones reaccionan al momento de tocarlos en vez de esperar el clic del navegador, que es lo que hace que una pantalla táctil se sienta como un mouse.",
       "touchHaptics": "Vibración al tocar",

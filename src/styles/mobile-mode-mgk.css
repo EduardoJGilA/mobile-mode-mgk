@@ -1858,11 +1858,20 @@ body.mgk-sheet-only #canvas { display: none !important; }
    Chat card dark theme overrides
    -------------------------------------------------------------------------- */
 
-.mgk-stack-card .chat-message,
-#mgk-chat-content .chat-message {
+.mgk-stack-card .chat-message {
   background: transparent !important;
   color: var(--mgk-bone) !important;
   border: none !important;
+  box-shadow: none !important;
+}
+
+#mgk-chat-content .chat-message {
+  background: rgba(0, 0, 0, 0.25) !important;
+  color: var(--mgk-bone) !important;
+  border: 1px solid var(--mgk-edge-soft) !important;
+  border-radius: var(--mgk-radius-sm) !important;
+  padding: 6px 8px !important;
+  margin-bottom: 8px !important;
   box-shadow: none !important;
 }
 
@@ -1877,11 +1886,84 @@ body.mgk-sheet-only #canvas { display: none !important; }
   border-color: var(--mgk-edge) !important;
 }
 
+/* Header icons, avatar images and item icons are kept small and crisp */
+.mgk-stack-card .card-header img,
+#mgk-chat-content .card-header img,
+.mgk-stack-card .chat-card header img,
+#mgk-chat-content .chat-card header img,
+.mgk-stack-card .dnd5e2.chat-card .card-header img,
+#mgk-chat-content .dnd5e2.chat-card .card-header img,
+.mgk-stack-card .message-header .avatar,
+#mgk-chat-content .message-header .avatar,
+.mgk-stack-card .message-header img,
+#mgk-chat-content .message-header img {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  max-width: 28px !important;
+  max-height: 28px !important;
+  object-fit: contain !important;
+  border-radius: 4px !important;
+  border: 1px solid var(--mgk-edge-soft) !important;
+  flex: 0 0 28px !important;
+  margin: 0 6px 0 0 !important;
+  display: inline-block !important;
+}
+
+.mgk-stack-card .card-header,
+#mgk-chat-content .card-header,
+.mgk-stack-card .dnd5e2.chat-card header,
+#mgk-chat-content .dnd5e2.chat-card header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin-bottom: 4px !important;
+  padding: 2px 0 !important;
+}
+
 .mgk-stack-card .card-header h3,
 #mgk-chat-content .card-header h3,
 .mgk-stack-card .chat-card .item-name,
 #mgk-chat-content .chat-card .item-name {
   color: var(--mgk-brass) !important;
+  font-size: 0.92rem !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+  flex: 1 1 auto !important;
+}
+
+/* Inline, description, and attached images: constrain height so they never dominate the screen */
+.mgk-stack-card .chat-message img:not(.avatar),
+#mgk-chat-content .chat-message img:not(.avatar),
+.mgk-stack-card .message-content img,
+#mgk-chat-content .message-content img,
+.mgk-stack-card .card-content img,
+#mgk-chat-content .card-content img {
+  max-height: 80px !important;
+  max-width: 100% !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+  border-radius: 4px !important;
+  border: 1px solid var(--mgk-edge-soft) !important;
+  display: block !important;
+  margin: 4px auto !important;
+}
+
+/* Floating stack popup (max-height 40vh) keeps images ultra compact so roll dice / outcome is immediately visible */
+.mgk-stack-card .message-content img,
+.mgk-stack-card .card-content img {
+  max-height: 44px !important;
+}
+
+.mgk-stack-card .card-content,
+#mgk-chat-content .card-content {
+  max-height: 120px !important;
+  overflow-y: auto !important;
+  font-size: 0.82rem !important;
+  line-height: 1.35 !important;
+  color: var(--mgk-ash) !important;
 }
 
 .mgk-stack-card .dice-roll,
