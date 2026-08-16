@@ -86,6 +86,7 @@
     },
     "Sheets": {
       "Close": "Cerrar",
+      "NoPermission": "No tienes permiso para ver esta hoja de personaje.",
       "Abilities": "Características",
       "Items": "Objetos",
       "Combat": "Combate",

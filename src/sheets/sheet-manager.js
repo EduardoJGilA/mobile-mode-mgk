@@ -48,6 +48,10 @@ export class SheetManager {
 
   static openSheet(actor) {
     if (!actor) return;
+    if (!game.user.isGM && !actor.isOwner && !actor.testUserPermission?.(game.user, "OWNER")) {
+      ui.notifications?.warn(t("Sheets.NoPermission", "You do not have permission to view this character sheet."));
+      return;
+    }
     this.currentActor = actor;
     this.adapter = this.getAdapter();
 

@@ -284,12 +284,27 @@ export class DnD5eAdapter {
     `;
   }
 
+  static getSpellMode(spell) {
+    const sys = spell.system;
+    if (!sys) return "prepared";
+    if (sys.method) return sys.method;
+    const fromSource = sys._source?.preparation?.mode;
+    if (fromSource) return fromSource;
+    const rawPrep = Object.getOwnPropertyDescriptor(sys, "preparation")?.value;
+    if (rawPrep?.mode) return rawPrep.mode;
+    return "prepared";
+  }
+
   static isPrepared(spell) {
-    const sys = spell.system ?? {};
-    const method = sys.method ?? sys.preparation?.mode;
-    if (method && method !== "prepared") return true;   // pact, innate, always...
-    if (sys.prepared !== undefined) return sys.prepared !== false;
-    return sys.preparation?.prepared !== false;
+    const sys = spell.system;
+    if (!sys) return true;
+    const mode = this.getSpellMode(spell);
+    if (mode && mode !== "prepared") return true;   // pact, innate, always, atwill, ritual...
+    if (typeof sys.prepared === "boolean") return sys.prepared;
+    if (typeof sys._source?.preparation?.prepared === "boolean") return sys._source.preparation.prepared;
+    const rawPrep = Object.getOwnPropertyDescriptor(sys, "preparation")?.value;
+    if (typeof rawPrep?.prepared === "boolean") return rawPrep.prepared;
+    return true;
   }
 
   static renderInventory(data) {
@@ -358,7 +373,7 @@ export class DnD5eAdapter {
     const byLevel = new Map();
 
     for (const spell of data.spells) {
-      const mode = spell.system?.method ?? spell.system?.preparation?.mode ?? "prepared";
+      const mode = this.getSpellMode(spell);
       if (mode === "innate") {
         innate.push(spell);
       } else if (mode === "atwill") {

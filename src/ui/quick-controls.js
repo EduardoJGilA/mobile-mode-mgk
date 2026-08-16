@@ -118,9 +118,10 @@ export class QuickControls {
   static openCharacterSheet() {
     let actor = null;
     if (AvatarCarousel.activeActorId) {
-      actor = game.actors?.get(AvatarCarousel.activeActorId);
+      const candidate = game.actors?.get(AvatarCarousel.activeActorId);
+      if (candidate && (candidate.isOwner || game.user.isGM)) actor = candidate;
     }
-    if (!actor) {
+    if (!actor && game.user.character && (game.user.character.isOwner || game.user.isGM)) {
       actor = game.user.character;
     }
     if (!actor && game.actors) {

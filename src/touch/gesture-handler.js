@@ -329,7 +329,9 @@ export class TouchGestureHandler {
     if (timeDiff < DOUBLE_TAP_MS && timeDiff > 0) {
       clearTimeout(this.tapTimeout);
       this.lastTapTime = 0;
-      if (token) Hooks.callAll("mobileModeOpenSheet", token.actor);
+      if (token?.actor && (token.actor.isOwner || game.user.isGM || token.actor.testUserPermission?.(game.user, "OWNER"))) {
+        Hooks.callAll("mobileModeOpenSheet", token.actor);
+      }
       return;
     }
 

@@ -134,6 +134,8 @@ export class AvatarCarousel {
       token.control({ releaseOthers: true });
     }
 
-    if (wasActive || !token) Hooks.callAll("mobileModeOpenSheet", actor);
+    if ((wasActive || !token) && (actor.isOwner || game.user.isGM)) {
+      Hooks.callAll("mobileModeOpenSheet", actor);
+    }
   }
 }

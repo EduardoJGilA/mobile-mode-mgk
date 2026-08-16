@@ -86,6 +86,7 @@
     },
     "Sheets": {
       "Close": "Close",
+      "NoPermission": "You do not have permission to view this character sheet.",
       "Abilities": "Abilities",
       "Items": "Items",
       "Combat": "Combat",
