@@ -85,15 +85,18 @@ export class DnD5eAdapter {
   static getSpellSlots(system) {
     const out = [];
     for (const [key, slot] of Object.entries(system.spells ?? {})) {
-      if (!slot || !slot.max) continue;
+      if (!slot) continue;
+      const max = this.num(slot.max, 0);
+      if (!max) continue;
+      const val = this.num(slot.value, 0);
       if (key === "pact") {
         out.push({
           key,
-          level: slot.level ?? null,
+          level: slot.level ? this.num(slot.level) : null,
           isPact: true,
           label: t("Sheets.PactMagic", "Pact Magic"),
-          value: slot.value ?? 0,
-          max: slot.max ?? 0
+          value: val,
+          max: max
         });
       } else {
         const levelMatch = key.match(/^spell(\d+)$/);
@@ -104,8 +107,8 @@ export class DnD5eAdapter {
             level: lvl,
             isPact: false,
             label: this.levelLabel(lvl),
-            value: slot.value ?? 0,
-            max: slot.max ?? 0
+            value: val,
+            max: max
           });
         }
       }
@@ -282,9 +285,11 @@ export class DnD5eAdapter {
   }
 
   static isPrepared(spell) {
-    const prep = spell.system?.preparation ?? {};
-    if (prep.mode && prep.mode !== "prepared") return true;   // pact, innate, always...
-    return prep.prepared !== false;
+    const sys = spell.system ?? {};
+    const method = sys.method ?? sys.preparation?.mode;
+    if (method && method !== "prepared") return true;   // pact, innate, always...
+    if (sys.prepared !== undefined) return sys.prepared !== false;
+    return sys.preparation?.prepared !== false;
   }
 
   static renderInventory(data) {
@@ -353,7 +358,7 @@ export class DnD5eAdapter {
     const byLevel = new Map();
 
     for (const spell of data.spells) {
-      const mode = spell.system?.preparation?.mode ?? "prepared";
+      const mode = spell.system?.method ?? spell.system?.preparation?.mode ?? "prepared";
       if (mode === "innate") {
         innate.push(spell);
       } else if (mode === "atwill") {
@@ -596,6 +601,24 @@ export class DnD5eAdapter {
   static async rest(actor, type) {
     if (type === "short") return actor.shortRest?.();
     return actor.longRest?.();
+  }
+
+  static async useItem(item, actor, event) {
+    if (typeof item.use === "function") {
+      const usageConfig = {
+        consume: { spellSlot: true, resources: true, usage: true },
+        consumeSpellSlot: true,
+        consumeResource: true,
+        consumeUsage: true
+      };
+      const dialogConfig = {
+        configure: true,
+        event
+      };
+      return item.use(usageConfig, dialogConfig);
+    }
+    if (typeof item.toChat === "function") return item.toChat();
+    return item.sheet?.render(true);
   }
 
   static async onCustomAction(action, dataset, actor, event) {

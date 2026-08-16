@@ -818,6 +818,44 @@ body.mgk-tablet .mgk-sheet-drawer.open { transform: translateX(0); }
 .mgk-row.expanded .mgk-row-detail { display: block; }
 .mgk-row-detail img { max-width: 100%; height: auto; }
 
+.mgk-detail-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--mgk-edge);
+}
+
+.mgk-detail-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--mgk-ink);
+  border: 1px solid var(--mgk-edge);
+  color: var(--mgk-brass);
+  font-family: var(--mgk-font-ui);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  clip-path: var(--mgk-chamfer-sm);
+  transition: background 0.12s var(--mgk-ease), border-color 0.12s var(--mgk-ease);
+}
+
+.mgk-detail-btn:hover {
+  background: var(--mgk-slate-hi);
+  border-color: var(--mgk-brass-dim);
+}
+
+.mgk-detail-btn:active {
+  background: var(--mgk-brass);
+  color: var(--mgk-ink);
+}
+
 .mgk-empty {
   padding: 16px;
   text-align: center;

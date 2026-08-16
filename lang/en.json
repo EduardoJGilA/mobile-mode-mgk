@@ -146,7 +146,9 @@
       "Grapple": "Grapple",
       "Hide": "Hide",
       "Shove": "Shove",
-      "Gear": "Gear"
+      "Gear": "Gear",
+      "UseItem": "Cast / Use",
+      "EditItem": "Edit item"
     },
     "Optimizer": {
       "Title": "Mobile Image Optimizer",

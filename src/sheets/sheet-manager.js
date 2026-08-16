@@ -232,9 +232,15 @@ export class SheetManager {
       case "use-item":
         ev.stopPropagation();
         if (!item) return;
-        if (typeof item.use === "function") await item.use({}, { event: ev });
-        else if (typeof item.toChat === "function") await item.toChat();
-        else await item.sheet?.render(true);
+        if (typeof this.adapter?.useItem === "function") {
+          await this.adapter.useItem(item, actor, ev);
+        } else if (typeof item.use === "function") {
+          await item.use({ consumeSpellSlot: true }, { configure: true, event: ev });
+        } else if (typeof item.toChat === "function") {
+          await item.toChat();
+        } else {
+          await item.sheet?.render(true);
+        }
         break;
 
       case "expand": {
@@ -291,9 +297,22 @@ export class SheetManager {
 
   static async enrich(item) {
     const raw = item.system?.description?.value ?? item.system?.description ?? "";
-    if (!raw) return `<em>${esc(t("Sheets.NoDescription", "No description."))}</em>`;
     const TextEditor = foundry.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor;
-    return TextEditor.enrichHTML(raw, { relativeTo: item, rollData: item.getRollData?.() ?? {} });
+    const bodyHtml = raw ? await TextEditor.enrichHTML(raw, { relativeTo: item, rollData: item.getRollData?.() ?? {} })
+      : `<em>${esc(t("Sheets.NoDescription", "No description."))}</em>`;
+
+    const actions = `
+      <div class="mgk-detail-actions">
+        <button type="button" class="mgk-detail-btn" data-action="use-item" data-item-id="${esc(item.id)}">
+          <i class="fas fa-dice-d20"></i> ${esc(t("Sheets.UseItem", "Cast / Use"))}
+        </button>
+        <button type="button" class="mgk-detail-btn" data-action="open-item" data-item-id="${esc(item.id)}">
+          <i class="fas fa-edit"></i> ${esc(t("Sheets.EditItem", "Edit"))}
+        </button>
+      </div>
+    `;
+
+    return `${bodyHtml}${actions}`;
   }
 
   /* -------------------------------------------- */

@@ -146,7 +146,9 @@
       "Grapple": "Agarrar",
       "Hide": "Esconderse",
       "Shove": "Empujar",
-      "Gear": "Equipo"
+      "Gear": "Equipo",
+      "UseItem": "Lanzar / Usar",
+      "EditItem": "Editar ficha"
     },
     "Optimizer": {
       "Title": "Optimizador de imágenes móvil",
