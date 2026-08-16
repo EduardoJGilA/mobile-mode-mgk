@@ -115,7 +115,13 @@ export class SheetManager {
     });
 
     // One delegated listener for every action any adapter emits.
-    panel.querySelector("#mgk-sheet-body").addEventListener("click", (ev) => this.onAction(ev));
+    panel.querySelector("#mgk-sheet-body").addEventListener("click", (ev) => {
+      if (ev.target.closest(".mgk-slot-tracker")) {
+        ev.preventDefault();
+        ev.stopPropagation();
+      }
+      this.onAction(ev);
+    });
 
     // Handle generic field bindings (e.g. bio/notes textareas).
     // Inputs fire `change`; contenteditable boxes only settle on blur.

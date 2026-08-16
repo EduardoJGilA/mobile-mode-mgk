@@ -1,5 +1,5 @@
 import { esc, t, signed } from '../../core/utils.js';
-import { section, itemRow, statBox, pips, empty, bioField, bioGrid } from '../components.js';
+import { section, itemRow, statBox, slotTracker, empty, bioField, bioGrid } from '../components.js';
 
 const PHYSICAL_TYPES = ["weapon", "equipment", "consumable", "tool", "loot", "container"];
 
@@ -86,14 +86,29 @@ export class DnD5eAdapter {
     const out = [];
     for (const [key, slot] of Object.entries(system.spells ?? {})) {
       if (!slot || !slot.max) continue;
-      const levelMatch = key.match(/^spell(\d+)$/);
-      out.push({
-        key,
-        level: levelMatch ? Number(levelMatch[1]) : null,
-        label: levelMatch ? this.levelLabel(Number(levelMatch[1])) : key.titleCase?.() ?? key,
-        value: slot.value ?? 0,
-        max: slot.max ?? 0
-      });
+      if (key === "pact") {
+        out.push({
+          key,
+          level: slot.level ?? null,
+          isPact: true,
+          label: t("Sheets.PactMagic", "Pact Magic"),
+          value: slot.value ?? 0,
+          max: slot.max ?? 0
+        });
+      } else {
+        const levelMatch = key.match(/^spell(\d+)$/);
+        if (levelMatch) {
+          const lvl = Number(levelMatch[1]);
+          out.push({
+            key,
+            level: lvl,
+            isPact: false,
+            label: this.levelLabel(lvl),
+            value: slot.value ?? 0,
+            max: slot.max ?? 0
+          });
+        }
+      }
     }
     return out;
   }
@@ -281,20 +296,21 @@ export class DnD5eAdapter {
       byLevel.get(level).push(spell);
     }
 
-    const slotFor = (level) => data.spellSlots.find(s => s.level === level);
+    const slotFor = (level) => data.spellSlots.find(s => s.level === level && !s.isPact)
+      ?? (level > 0 ? data.spellSlots.find(s => s.level === level) : null);
 
     const sections = [...byLevel.keys()].sort((a, b) => a - b).map(level => {
       const slot = slotFor(level);
-      const header = `${esc(this.levelLabel(level))}${slot ? ` ${pips(slot.value, slot.max)}` : ""}`;
+      const tracker = slot ? slotTracker(slot) : "";
+      const header = `<span>${esc(this.levelLabel(level))}</span>${tracker}`;
       const rows = byLevel.get(level).map(s => itemRow({
         id: s.id, img: s.img, name: s.name,
         subtitle: [s.labels?.components?.vsm, s.labels?.school].filter(Boolean).join(" · "),
         chips: [this.isPrepared(s) ? null : t("Sheets.Unprepared", "unprepared"), ...this.itemChips(s)]
       })).join("");
-      // `header` already contains markup from pips(), so it is injected raw.
       return `
         <details class="mgk-section" open>
-          <summary class="mgk-section-title"><span>${header}</span><i class="fas fa-chevron-down"></i></summary>
+          <summary class="mgk-section-title">${header}<i class="fas fa-chevron-down"></i></summary>
           <div class="mgk-section-body">${rows}</div>
         </details>
       `;
@@ -469,6 +485,21 @@ export class DnD5eAdapter {
   static async rest(actor, type) {
     if (type === "short") return actor.shortRest?.();
     return actor.longRest?.();
+  }
+
+  static async onCustomAction(action, dataset, actor, event) {
+    event?.stopPropagation?.();
+    if (action === "slot-step") {
+      const slotKey = dataset.slot;
+      if (!slotKey) return;
+      const step = Number(dataset.step) || 0;
+      const current = Number(foundry.utils.getProperty(actor, `system.spells.${slotKey}.value`)) || 0;
+      const max = Number(foundry.utils.getProperty(actor, `system.spells.${slotKey}.max`)) || 0;
+      const next = Math.max(0, Math.min(max, current + step));
+      if (next !== current) {
+        await actor.update({ [`system.spells.${slotKey}.value`]: next });
+      }
+    }
   }
 }
 

@@ -183,11 +183,33 @@ await check("hostile item name is escaped everywhere it appears", () => {
   assert.ok(seen > 0, "the hostile name never rendered, so nothing was actually tested");
 });
 
-await check("spell tab groups by level and shows slot pips", () => {
+await check("spell tab groups by level and shows numeric slot tracker", () => {
   const html = DnD5eAdapter.renderTab("Spells", data);
   assert.ok(html.includes("Cantrip"), "missing cantrip group");
   assert.ok(html.includes("1st Level"), "missing level 1 group");
-  assert.ok(html.includes("mgk-pip"), "missing slot pips");
+  assert.ok(html.includes("mgk-slot-tracker"), "missing slot tracker");
+  assert.ok(html.includes("mgk-slot-step"), "missing slot step buttons");
+  assert.ok(html.includes("mgk-slot-val"), "missing slot value");
+});
+
+await check("slot-step action updates actor slot value bounded by max and zero", async () => {
+  let updated = null;
+  const mockActor = {
+    update: async (u) => { updated = u; }
+  };
+  const origGetProperty = globalThis.foundry.utils.getProperty;
+  globalThis.foundry.utils.getProperty = (obj, path) => {
+    if (path === "system.spells.spell1.value") return 2;
+    if (path === "system.spells.spell1.max") return 4;
+    return origGetProperty(obj, path);
+  };
+  await DnD5eAdapter.onCustomAction("slot-step", { slot: "spell1", step: "-1" }, mockActor, { stopPropagation: () => {} });
+  assert.deepStrictEqual(updated, { "system.spells.spell1.value": 1 });
+
+  await DnD5eAdapter.onCustomAction("slot-step", { slot: "spell1", step: "1" }, mockActor, { stopPropagation: () => {} });
+  assert.deepStrictEqual(updated, { "system.spells.spell1.value": 3 });
+
+  globalThis.foundry.utils.getProperty = origGetProperty;
 });
 
 await check("effects tab marks the active status", () => {

@@ -853,6 +853,89 @@ body.mgk-tablet .mgk-sheet-drawer.open { transform: translateX(0); }
 
 .mgk-pip.filled { background: var(--mgk-brass); }
 
+/* Interactive spell slot tracker */
+.mgk-slot-tracker {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  margin-right: 8px;
+  padding: 1px 2px;
+  background: var(--mgk-ink);
+  border: 1px solid var(--mgk-edge);
+  clip-path: var(--mgk-chamfer-sm);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.mgk-slot-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 22px;
+  background: var(--mgk-slate);
+  border: 1px solid var(--mgk-edge);
+  color: var(--mgk-brass);
+  font-size: 0.6rem;
+  cursor: pointer;
+  clip-path: var(--mgk-chamfer-sm);
+  padding: 0;
+  transition: background 0.12s var(--mgk-ease), color 0.12s var(--mgk-ease), transform 0.1s ease;
+}
+
+.mgk-slot-step:hover:not(:disabled) {
+  background: var(--mgk-slate-hi);
+  border-color: var(--mgk-brass-dim);
+}
+
+.mgk-slot-step:active:not(:disabled) {
+  background: var(--mgk-brass);
+  color: var(--mgk-ink);
+  transform: scale(0.92);
+}
+
+.mgk-slot-step:disabled {
+  opacity: 0.25;
+  cursor: default;
+  color: var(--mgk-ash);
+  border-color: transparent;
+  background: transparent;
+}
+
+.mgk-slot-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  padding: 0 4px;
+  font-family: var(--mgk-font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--mgk-brass);
+}
+
+.mgk-slot-val {
+  color: var(--mgk-bone);
+}
+
+.mgk-slot-sep {
+  color: var(--mgk-ash);
+  margin: 0 2px;
+  font-size: 0.65rem;
+  font-weight: 400;
+}
+
+.mgk-slot-max {
+  color: var(--mgk-ash);
+}
+
+.mgk-slot-badge.empty .mgk-slot-val {
+  color: var(--mgk-oxide);
+}
+
 /* --------------------------------------------------------------------------
    Conditions
    -------------------------------------------------------------------------- */

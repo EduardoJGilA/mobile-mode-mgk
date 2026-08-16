@@ -77,6 +77,33 @@ export function pips(value, max) {
 }
 
 /**
+ * Interactive numeric spell slot tracker with +/- step buttons.
+ * Emits `slot-step` actions targeting the slot key.
+ */
+export function slotTracker({ key, value = 0, max = 0 }) {
+  if (!max) return "";
+  const val = Number(value) || 0;
+  const mx = Number(max) || 0;
+  const isZero = val <= 0;
+  const isFull = val >= mx;
+  return `
+    <span class="mgk-slot-tracker" data-slot="${esc(key)}">
+      <button type="button" class="mgk-slot-step" data-action="slot-step" data-slot="${esc(key)}" data-step="-1"
+              aria-label="Use slot" ${isZero ? "disabled" : ""}>
+        <i class="fas fa-minus"></i>
+      </button>
+      <span class="mgk-slot-badge${isZero ? " empty" : ""}">
+        <span class="mgk-slot-val">${esc(val)}</span><span class="mgk-slot-sep">/</span><span class="mgk-slot-max">${esc(mx)}</span>
+      </span>
+      <button type="button" class="mgk-slot-step" data-action="slot-step" data-slot="${esc(key)}" data-step="1"
+              aria-label="Recover slot" ${isFull ? "disabled" : ""}>
+        <i class="fas fa-plus"></i>
+      </button>
+    </span>
+  `;
+}
+
+/**
  * An editable sheet field bound to a document path.
  *
  * `type` picks the control: `text` for short scalars, `textarea` for plain
