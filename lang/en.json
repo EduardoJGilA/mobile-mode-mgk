@@ -88,6 +88,7 @@
     },
     "Sheets": {
       "Close": "Close",
+      "Minimize": "Minimize",
       "NoPermission": "You do not have permission to view this character sheet.",
       "Abilities": "Abilities",
       "Items": "Items",

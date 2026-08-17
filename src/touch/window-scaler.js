@@ -1,5 +1,6 @@
 import { ChatStack } from '../ui/chat-stack.js';
 import { ChatDrawer } from '../ui/chat-drawer.js';
+import { SheetManager } from '../sheets/sheet-manager.js';
 
 /**
  * Fits Foundry application windows (journals, handouts, item sheets, settings, dialogs)
@@ -32,12 +33,15 @@ export class WindowScaler {
       element.style.zIndex = "1500";
     }
 
-    // Auto-hide floating chat card and chat drawer when a roll dialog or window pops up
+    // Auto-hide floating chat card, chat drawer, and sheet drawer when a roll dialog or window pops up
     if (ChatStack.visible) {
       ChatStack.hide();
     }
     if (ChatDrawer.isOpen) {
       ChatDrawer.close();
+    }
+    if (SheetManager.isOpen) {
+      SheetManager.close();
     }
 
     const screenWidth = window.innerWidth;

@@ -1877,8 +1877,6 @@ body.mgk-sheet-only #canvas { display: none !important; }
 
 .mgk-stack-card .dnd5e2.chat-card,
 #mgk-chat-content .dnd5e2.chat-card,
-.mgk-stack-card .card-header,
-#mgk-chat-content .card-header,
 .mgk-stack-card .chat-card,
 #mgk-chat-content .chat-card {
   background: transparent !important;
@@ -1886,7 +1884,37 @@ body.mgk-sheet-only #canvas { display: none !important; }
   border-color: var(--mgk-edge) !important;
 }
 
-/* Header icons, avatar images and item icons are kept small and crisp */
+/* Card description / header container: MUST be a block/section container */
+.mgk-stack-card .dnd5e2.chat-card .card-header,
+#mgk-chat-content .dnd5e2.chat-card .card-header,
+.mgk-stack-card .chat-card .description,
+#mgk-chat-content .chat-card .description,
+.mgk-stack-card .card-header,
+#mgk-chat-content .card-header {
+  display: block !important;
+  background: transparent !important;
+  border-color: var(--mgk-edge-soft) !important;
+}
+
+/* The actual header row with icon, title, subtitle, and collapse arrow */
+.mgk-stack-card .dnd5e2.chat-card .summary,
+#mgk-chat-content .dnd5e2.chat-card .summary,
+.mgk-stack-card .chat-card header.summary,
+#mgk-chat-content .chat-card header.summary,
+.mgk-stack-card header.card-header,
+#mgk-chat-content header.card-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+  margin-bottom: 4px !important;
+  padding: 2px 0 !important;
+  cursor: pointer !important;
+}
+
+/* Header icons and item icons */
+.mgk-stack-card .summary img,
+#mgk-chat-content .summary img,
 .mgk-stack-card .card-header img,
 #mgk-chat-content .card-header img,
 .mgk-stack-card .chat-card header img,
@@ -1897,40 +1925,155 @@ body.mgk-sheet-only #canvas { display: none !important; }
 #mgk-chat-content .message-header .avatar,
 .mgk-stack-card .message-header img,
 #mgk-chat-content .message-header img {
-  width: 28px !important;
-  height: 28px !important;
-  min-width: 28px !important;
-  min-height: 28px !important;
-  max-width: 28px !important;
-  max-height: 28px !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  max-width: 32px !important;
+  max-height: 32px !important;
   object-fit: contain !important;
   border-radius: 4px !important;
   border: 1px solid var(--mgk-edge-soft) !important;
-  flex: 0 0 28px !important;
-  margin: 0 6px 0 0 !important;
+  flex: 0 0 32px !important;
+  margin: 0 !important;
   display: inline-block !important;
 }
 
-.mgk-stack-card .card-header,
-#mgk-chat-content .card-header,
-.mgk-stack-card .dnd5e2.chat-card header,
-#mgk-chat-content .dnd5e2.chat-card header {
+.mgk-stack-card .dnd5e2.chat-card .name-stacked,
+#mgk-chat-content .dnd5e2.chat-card .name-stacked,
+.mgk-stack-card .name-stacked,
+#mgk-chat-content .name-stacked {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
   display: flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  margin-bottom: 4px !important;
-  padding: 2px 0 !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
+.mgk-stack-card .dnd5e2.chat-card .name-stacked .title,
+#mgk-chat-content .dnd5e2.chat-card .name-stacked .title,
+.mgk-stack-card .name-stacked .title,
+#mgk-chat-content .name-stacked .title,
 .mgk-stack-card .card-header h3,
 #mgk-chat-content .card-header h3,
 .mgk-stack-card .chat-card .item-name,
 #mgk-chat-content .chat-card .item-name {
   color: var(--mgk-brass) !important;
-  font-size: 0.92rem !important;
-  line-height: 1.2 !important;
+  font-family: var(--mgk-font-title) !important;
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
   margin: 0 !important;
-  flex: 1 1 auto !important;
+  word-break: normal !important;
+  white-space: normal !important;
+  display: block !important;
+}
+
+.mgk-stack-card .dnd5e2.chat-card .name-stacked .subtitle,
+#mgk-chat-content .dnd5e2.chat-card .name-stacked .subtitle,
+.mgk-stack-card .name-stacked .subtitle,
+#mgk-chat-content .name-stacked .subtitle {
+  color: var(--mgk-ash) !important;
+  font-size: 0.72rem !important;
+  line-height: 1.2 !important;
+  margin: 1px 0 0 0 !important;
+  white-space: normal !important;
+  display: block !important;
+}
+
+.mgk-stack-card .summary > i,
+#mgk-chat-content .summary > i {
+  color: var(--mgk-ash) !important;
+  flex: 0 0 auto !important;
+  font-size: 0.8rem !important;
+}
+
+/* Chat Card Buttons (Cast, Save DC, Damage, Healing, Attack Roll) */
+.mgk-stack-card .card-buttons,
+#mgk-chat-content .card-buttons,
+.mgk-stack-card .dnd5e2.chat-card .card-buttons,
+#mgk-chat-content .dnd5e2.chat-card .card-buttons {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  margin-top: 8px !important;
+  margin-bottom: 4px !important;
+}
+
+.mgk-stack-card .card-buttons button,
+#mgk-chat-content .card-buttons button,
+.mgk-stack-card .dnd5e2.chat-card .card-buttons button,
+#mgk-chat-content .dnd5e2.chat-card .card-buttons button {
+  background: var(--mgk-slate) !important;
+  border: 1px solid var(--mgk-edge) !important;
+  color: var(--mgk-bone) !important;
+  padding: 6px 12px !important;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  border-radius: var(--mgk-radius-sm) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  min-height: 38px !important;
+  width: 100% !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease !important;
+}
+
+.mgk-stack-card .card-buttons button:active,
+#mgk-chat-content .card-buttons button:active {
+  background: var(--mgk-slate-hi) !important;
+  border-color: var(--mgk-brass) !important;
+  color: var(--mgk-brass) !important;
+  transform: scale(0.98) !important;
+}
+
+.mgk-stack-card .card-buttons button i,
+#mgk-chat-content .card-buttons button i {
+  color: var(--mgk-brass) !important;
+}
+
+/* Pills & Tags */
+.mgk-stack-card .pills,
+#mgk-chat-content .pills,
+.mgk-stack-card .card-footer.pills,
+#mgk-chat-content .card-footer.pills {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 4px !important;
+  margin-top: 6px !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+
+.mgk-stack-card .pills .pill,
+#mgk-chat-content .pills .pill {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border: 1px solid var(--mgk-edge-soft) !important;
+  color: var(--mgk-ash) !important;
+  font-size: 0.65rem !important;
+  padding: 2px 6px !important;
+  border-radius: 3px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+/* Supplements / Materials */
+.mgk-stack-card .supplement,
+#mgk-chat-content .supplement {
+  font-size: 0.72rem !important;
+  color: var(--mgk-ash) !important;
+  margin: 4px 0 !important;
+}
+
+.mgk-stack-card .supplement strong,
+#mgk-chat-content .supplement strong {
+  color: var(--mgk-bone) !important;
 }
 
 /* Inline, description, and attached images: constrain height so they never dominate the screen */

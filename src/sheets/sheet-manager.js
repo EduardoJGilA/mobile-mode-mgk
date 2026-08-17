@@ -64,6 +64,14 @@ export class SheetManager {
     this.panel.classList.add("open");
   }
 
+  static get isOpen() {
+    return !!this.panel?.classList.contains("open");
+  }
+
+  static minimize() {
+    this.close();
+  }
+
   static close() {
     HpWidget.close();
     // Commit whatever the caret is sitting in before the drawer goes away.
@@ -94,6 +102,9 @@ export class SheetManager {
         </div>
         <div class="mgk-header-right">
           <button type="button" id="mgk-sheet-hp" class="mgk-header-hp"></button>
+          <button type="button" id="mgk-minimize-sheet" class="mgk-icon-btn" aria-label="${esc(t("Sheets.Minimize", "Minimize"))}">
+            <i class="fas fa-minus"></i>
+          </button>
           <button type="button" id="mgk-close-sheet" class="mgk-icon-btn" aria-label="${esc(t("Sheets.Close", "Close"))}">
             <i class="fas fa-times"></i>
           </button>
@@ -106,6 +117,7 @@ export class SheetManager {
     document.body.appendChild(panel);
 
     panel.querySelector("#mgk-close-sheet").addEventListener("click", () => this.close());
+    panel.querySelector("#mgk-minimize-sheet").addEventListener("click", () => this.minimize());
     panel.querySelector("#mgk-sheet-hp").addEventListener("click", (ev) => {
       ev.stopPropagation();
       if (!this.currentActor || this.adapter.hasHp === false) return;
@@ -236,6 +248,7 @@ export class SheetManager {
       case "use-item":
         ev.stopPropagation();
         if (!item) return;
+        this.minimize();
         if (typeof this.adapter?.useItem === "function") {
           await this.adapter.useItem(item, actor, ev);
         } else if (typeof item.use === "function") {
@@ -260,18 +273,22 @@ export class SheetManager {
 
       case "open-item":
         ev.stopPropagation();
+        this.minimize();
         item?.sheet?.render(true);
         break;
 
       case "roll-ability":
+        this.minimize();
         await this.adapter.rollAbility(actor, ability, ev);
         break;
 
       case "roll-save":
+        this.minimize();
         await this.adapter.rollSave(actor, ability, ev);
         break;
 
       case "roll-skill":
+        this.minimize();
         await this.adapter.rollSkill(actor, skill, ev);
         break;
 
@@ -280,10 +297,12 @@ export class SheetManager {
         break;
 
       case "rest-short":
+        this.minimize();
         await this.adapter.rest(actor, "short");
         break;
 
       case "rest-long":
+        this.minimize();
         await this.adapter.rest(actor, "long");
         break;
 

@@ -624,7 +624,8 @@ export class DnD5eAdapter {
         consume: { spellSlot: true, resources: true, usage: true },
         consumeSpellSlot: true,
         consumeResource: true,
-        consumeUsage: true
+        consumeUsage: true,
+        event
       };
       const dialogConfig = {
         configure: true,
