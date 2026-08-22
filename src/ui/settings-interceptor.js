@@ -2,16 +2,29 @@ import { DeviceDetector } from '../core/device-detector.js';
 
 /**
  * Transforms Foundry's desktop-heavy SettingsConfig dialog into a full-screen,
- * thumb-friendly mobile configuration panel.
+ * single-column, thumb-friendly mobile configuration panel.
  */
 export class SettingsInterceptor {
   static init() {
     Hooks.on("renderSettingsConfig", (app, html) => this.enhanceSettings(app, html));
+    Hooks.on("closeSettingsConfig", () => {
+      document.body.classList.remove("mgk-settings-open");
+    });
+
     // Catch submenus opened by modules (registerMenu)
     Hooks.on("renderFormApplication", (app, html) => {
       const classes = app.options?.classes || [];
       if (classes.some(c => /settings|config/i.test(c))) {
         this.enhanceSettings(app, html);
+      }
+    });
+
+    Hooks.on("closeFormApplication", (app) => {
+      const classes = app.options?.classes || [];
+      if (classes.some(c => /settings|config/i.test(c))) {
+        if (!document.querySelector(".settings-config:not([style*='display: none'])")) {
+          document.body.classList.remove("mgk-settings-open");
+        }
       }
     });
   }
@@ -22,7 +35,11 @@ export class SettingsInterceptor {
     const el = html instanceof HTMLElement ? html : html?.[0];
     if (!el) return;
 
+    document.body.classList.add("mgk-settings-open");
     el.classList.add("mgk-mobile-settings");
+
+    const form = el.tagName === "FORM" ? el : el.querySelector("form");
+    if (form) form.classList.add("mgk-mobile-settings-form");
 
     // Add mobile close header button if not present
     this.ensureMobileHeader(app, el);
@@ -33,13 +50,14 @@ export class SettingsInterceptor {
     // Enhance sliders with live numeric badges
     this.enhanceRangeSliders(el);
 
-    // Scroll tabs smoothly to active item
-    this.enhanceTabs(el);
+    // Make category navigation smooth
+    this.enhanceCategories(el);
+
+    // Observe changes inside the settings list when categories change
+    this.observeSettingsChanges(el);
   }
 
   static ensureMobileHeader(app, el) {
-    if (el.querySelector(".mgk-settings-header")) return;
-
     const header = el.querySelector(".window-header");
     if (header) {
       header.classList.add("mgk-settings-header");
@@ -74,12 +92,29 @@ export class SettingsInterceptor {
     });
   }
 
-  static enhanceTabs(el) {
-    const tabs = el.querySelectorAll("nav.sheet-tabs .item, nav.tabs .item");
-    tabs.forEach((tab) => {
-      tab.addEventListener("click", () => {
-        tab.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  static enhanceCategories(el) {
+    const categoryItems = el.querySelectorAll(".categories .category, .categories li, .categories a, nav.sheet-tabs .item, nav.tabs .item");
+    categoryItems.forEach((item) => {
+      item.addEventListener("click", () => {
+        item.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+        setTimeout(() => {
+          this.enhanceCheckboxes(el);
+          this.enhanceRangeSliders(el);
+        }, 80);
       });
     });
+  }
+
+  static observeSettingsChanges(el) {
+    const list = el.querySelector(".settings-list, .scrollable, section.content, .sheet-body");
+    if (!list || list.dataset.mgkObserved) return;
+
+    list.dataset.mgkObserved = "1";
+    const observer = new MutationObserver(() => {
+      this.enhanceCheckboxes(el);
+      this.enhanceRangeSliders(el);
+    });
+
+    observer.observe(list, { childList: true, subtree: true });
   }
 }
