@@ -37,7 +37,7 @@ export class DeviceDetector {
     let forced = "auto";
     try {
       forced = game.settings.get(MODULE_ID, "forceMobile");
-    } catch (err) {
+    } catch {
       // Settings not registered yet — fall back to detection.
     }
     if (forced === "on") return true;

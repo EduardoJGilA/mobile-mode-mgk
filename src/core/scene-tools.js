@@ -20,7 +20,7 @@ export function activateTool(controls, tool) {
       if (!ui.controls?.activate) break;
       ui.controls.activate({ control, tool });
       return true;
-    } catch (err) {
+    } catch {
       // Wrong name for this version; try the next.
     }
   }
@@ -31,7 +31,7 @@ export function activateTool(controls, tool) {
         canvas[control].activate();
         return true;
       }
-    } catch (err) {
+    } catch {
       // Nothing else to try for this name.
     }
   }

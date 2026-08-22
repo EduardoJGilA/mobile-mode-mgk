@@ -107,10 +107,10 @@ export class SettingsInterceptor {
 
   static observeSettingsChanges(el) {
     const list = el.querySelector(".settings-list, .scrollable, section.content, .sheet-body");
-    if (!list || list.dataset.mgkObserved) return;
+    if (!list || list.dataset.mgkObserved || typeof globalThis.MutationObserver !== "function") return;
 
     list.dataset.mgkObserved = "1";
-    const observer = new MutationObserver(() => {
+    const observer = new globalThis.MutationObserver(() => {
       this.enhanceCheckboxes(el);
       this.enhanceRangeSliders(el);
     });

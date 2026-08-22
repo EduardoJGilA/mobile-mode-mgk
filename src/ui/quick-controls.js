@@ -200,7 +200,7 @@ export class QuickControls {
     try {
       const roll = await new Roll(formula).evaluate();
       await roll.toMessage({ speaker: ChatMessage.getSpeaker() });
-    } catch (err) {
+    } catch {
       ui.notifications?.error(t("QuickControls.BadFormula", "Invalid roll formula."));
     }
   }
