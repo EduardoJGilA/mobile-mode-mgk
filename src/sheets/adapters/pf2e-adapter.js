@@ -97,7 +97,7 @@ export class PF2eAdapter {
         <div class="mgk-stat-grid">
           ${statBox(t("Sheets.AC", "AC"), data.ac)}
           ${statBox(t("Sheets.Speed", "SPEED"), data.speed)}
-          ${statBox(t("Sheets.Perception", "PERCEPTION"), signed(data.perception))}
+          ${statBox(t("Sheets.Perception", "PERCEPTION"), signed(data.perception), { action: "roll-perception" })}
           ${statBox(t("Sheets.Level", "LEVEL"), data.level)}
         </div>
         <div class="mgk-ability-grid">${abilityCards}</div>

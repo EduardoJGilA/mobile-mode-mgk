@@ -292,6 +292,39 @@ export class SheetManager {
         await this.adapter.rollSkill(actor, skill, ev);
         break;
 
+      case "roll-initiative":
+        this.minimize();
+        if (typeof this.adapter?.rollInitiative === "function") {
+          await this.adapter.rollInitiative(actor, ev);
+        } else if (typeof actor.rollInitiativeDialog === "function") {
+          await actor.rollInitiativeDialog({ event: ev });
+        } else if (typeof actor.rollInitiative === "function") {
+          await actor.rollInitiative({ createCombatants: true, rerollInitiative: true, event: ev });
+        }
+        break;
+
+      case "roll-hit-die":
+        this.minimize();
+        if (typeof this.adapter?.rollHitDie === "function") {
+          await this.adapter.rollHitDie(actor, ev);
+        } else if (typeof actor.rollHitDie === "function") {
+          await actor.rollHitDie({ event: ev });
+        } else if (typeof actor.rollHitDice === "function") {
+          await actor.rollHitDice({ event: ev });
+        }
+        break;
+
+      case "roll-perception":
+        this.minimize();
+        if (typeof actor.perception?.roll === "function") {
+          await actor.perception.roll({ event: ev });
+        } else if (typeof this.adapter?.rollPerception === "function") {
+          await this.adapter.rollPerception(actor, ev);
+        } else {
+          await this.adapter?.rollSkill?.(actor, "prc", ev);
+        }
+        break;
+
       case "toggle-status":
         await actor.toggleStatusEffect?.(status);
         break;

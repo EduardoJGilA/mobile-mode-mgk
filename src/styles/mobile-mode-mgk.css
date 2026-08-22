@@ -2341,15 +2341,20 @@ body.mgk-settings-open #mgk-left-controls,
 body.mgk-settings-open #mgk-right-controls,
 body.mgk-settings-open #mgk-avatar-carousel,
 body.mgk-settings-open #mgk-chat-stack,
-body.mgk-settings-open #mgk-macro-hotbar {
+body.mgk-settings-open #mgk-macro-hotbar,
+body.mgk-settings-open .mgk-drawer-panel {
   display: none !important;
   visibility: hidden !important;
+  opacity: 0 !important;
   pointer-events: none !important;
 }
 
 body.mobile-mode-mgk .app.window-app.settings-config,
 body.mobile-mode-mgk .settings-config,
-body.mobile-mode-mgk #client-settings {
+body.mobile-mode-mgk #client-settings,
+body.mobile-mode-mgk application[data-appid*="settings"],
+body.mobile-mode-mgk [id*="settings-config"],
+body.mobile-mode-mgk [id*="client-settings"] {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
@@ -2366,7 +2371,7 @@ body.mobile-mode-mgk #client-settings {
   transform: none !important;
   border: none !important;
   border-radius: 0 !important;
-  z-index: 99999 !important;
+  z-index: 100000 !important;
   display: flex !important;
   flex-direction: column !important;
   background: var(--mgk-ink) !important;
@@ -2416,7 +2421,8 @@ body.mobile-mode-mgk #client-settings .window-header .header-button.close {
 body.mobile-mode-mgk .settings-config form,
 body.mobile-mode-mgk .settings-config .window-content,
 body.mobile-mode-mgk #client-settings form,
-body.mobile-mode-mgk #client-settings .window-content {
+body.mobile-mode-mgk #client-settings .window-content,
+body.mobile-mode-mgk form.settings-config {
   display: flex !important;
   flex-direction: column !important;
   grid-template-columns: 1fr !important;
@@ -2430,15 +2436,19 @@ body.mobile-mode-mgk #client-settings .window-content {
 }
 
 /* Category Sidebar transformed into a Top Horizontal Scrollbar */
+body.mobile-mode-mgk .settings-config aside,
 body.mobile-mode-mgk .settings-config aside.sidebar,
 body.mobile-mode-mgk .settings-config aside.categories,
 body.mobile-mode-mgk .settings-config nav.categories,
+body.mobile-mode-mgk .settings-config .sidebar,
 body.mobile-mode-mgk .settings-config .categories,
+body.mobile-mode-mgk #client-settings aside,
 body.mobile-mode-mgk #client-settings .categories {
   display: flex !important;
   flex-direction: column !important;
   width: 100% !important;
   max-width: 100% !important;
+  min-width: 100% !important;
   flex: 0 0 auto !important;
   background: var(--mgk-slate) !important;
   border-right: none !important;
@@ -2451,7 +2461,8 @@ body.mobile-mode-mgk #client-settings .categories {
 body.mobile-mode-mgk .settings-config .categories input[type="search"],
 body.mobile-mode-mgk .settings-config .categories input.search,
 body.mobile-mode-mgk .settings-config .categories .search,
-body.mobile-mode-mgk .settings-config .categories input {
+body.mobile-mode-mgk .settings-config .categories input,
+body.mobile-mode-mgk #client-settings .categories input {
   width: 100% !important;
   min-height: 38px !important;
   font-size: 15px !important;
@@ -2467,11 +2478,13 @@ body.mobile-mode-mgk .settings-config .categories input {
 /* Category list as horizontal pills */
 body.mobile-mode-mgk .settings-config .categories .category-list,
 body.mobile-mode-mgk .settings-config .categories ul,
+body.mobile-mode-mgk .settings-config .categories ol,
 body.mobile-mode-mgk .settings-config .categories nav,
 body.mobile-mode-mgk .settings-config nav.sheet-tabs,
 body.mobile-mode-mgk .settings-config nav.tabs,
 body.mobile-mode-mgk #client-settings nav.sheet-tabs,
-body.mobile-mode-mgk #client-settings nav.tabs {
+body.mobile-mode-mgk #client-settings nav.tabs,
+body.mobile-mode-mgk #client-settings .categories ul {
   display: flex !important;
   flex-direction: row !important;
   overflow-x: auto !important;
@@ -2497,7 +2510,8 @@ body.mobile-mode-mgk .settings-config .categories button,
 body.mobile-mode-mgk .settings-config nav.sheet-tabs .item,
 body.mobile-mode-mgk .settings-config nav.tabs .item,
 body.mobile-mode-mgk #client-settings nav.sheet-tabs .item,
-body.mobile-mode-mgk #client-settings nav.tabs .item {
+body.mobile-mode-mgk #client-settings nav.tabs .item,
+body.mobile-mode-mgk #client-settings .categories li {
   flex: 0 0 auto !important;
   min-height: 36px !important;
   padding: 6px 14px !important;
@@ -2520,7 +2534,8 @@ body.mobile-mode-mgk .settings-config .categories a.active,
 body.mobile-mode-mgk .settings-config nav.sheet-tabs .item.active,
 body.mobile-mode-mgk .settings-config nav.tabs .item.active,
 body.mobile-mode-mgk #client-settings nav.sheet-tabs .item.active,
-body.mobile-mode-mgk #client-settings nav.tabs .item.active {
+body.mobile-mode-mgk #client-settings nav.tabs .item.active,
+body.mobile-mode-mgk #client-settings .categories li.active {
   background: var(--mgk-brass) !important;
   color: var(--mgk-ink) !important;
   border-color: var(--mgk-brass) !important;
@@ -2534,6 +2549,7 @@ body.mobile-mode-mgk .settings-config .categories .count {
 }
 
 /* Settings List Area (100% Full Screen Width) */
+body.mobile-mode-mgk .settings-config section.settings-list,
 body.mobile-mode-mgk .settings-config .settings-list,
 body.mobile-mode-mgk .settings-config section.scrollable,
 body.mobile-mode-mgk .settings-config .scrollable,
@@ -2544,6 +2560,7 @@ body.mobile-mode-mgk #client-settings section.content,
 body.mobile-mode-mgk #client-settings .sheet-body {
   width: 100% !important;
   max-width: 100% !important;
+  min-width: 100% !important;
   flex: 1 1 auto !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;

@@ -231,8 +231,8 @@ export class DnD5eAdapter {
         <div class="mgk-stat-grid">
           ${statBox(t("Sheets.AC", "AC"), data.ac)}
           ${statBox(t("Sheets.Speed", "SPEED"), `${data.speed}`)}
-          ${statBox(t("Sheets.HitDice", "HIT DICE"), `${this.num(data.hd.value)}/${this.num(data.hd.max)}`)}
-          ${statBox(t("Sheets.Initiative", "INITIATIVE"), signed(data.init))}
+          ${statBox(t("Sheets.HitDice", "HIT DICE"), `${this.num(data.hd.value)}/${this.num(data.hd.max)}`, { action: "roll-hit-die" })}
+          ${statBox(t("Sheets.Initiative", "INITIATIVE"), signed(data.init), { action: "roll-initiative" })}
         </div>
         <div class="mgk-ability-grid">${abilityCards}</div>
         ${section(t("Sheets.Skills", "Skills"), skillRows || empty(), { count: Object.keys(data.skills).length })}
@@ -611,6 +611,31 @@ export class DnD5eAdapter {
     if (!actor.rollSkill) return;
     if (this.usesObjectRollApi) return actor.rollSkill({ skill, event });
     return actor.rollSkill(skill, { event });
+  }
+
+  static async rollInitiative(actor, event) {
+    if (typeof actor.rollInitiativeDialog === "function") {
+      return actor.rollInitiativeDialog({ event });
+    }
+    if (typeof actor.rollInitiative === "function") {
+      return actor.rollInitiative({ createCombatants: true, rerollInitiative: true, event });
+    }
+    const mod = actor.system?.attributes?.init?.total ?? 0;
+    const formula = `1d20 + ${mod}`;
+    const roll = await new Roll(formula, actor.getRollData?.() ?? {}).evaluate();
+    return roll.toMessage({
+      speaker: ChatMessage.getSpeaker({ actor }),
+      flavor: game.i18n?.localize("DND5E.Initiative") || "Initiative"
+    });
+  }
+
+  static async rollHitDie(actor, event) {
+    if (typeof actor.rollHitDie === "function") {
+      return actor.rollHitDie({ event });
+    }
+    if (typeof actor.rollHitDice === "function") {
+      return actor.rollHitDice({ event });
+    }
   }
 
   static async rest(actor, type) {
