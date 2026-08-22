@@ -25,7 +25,8 @@ export class WindowScaler {
   static scaleWindow(app, html) {
     const element = this.resolveElement(app, html);
     if (!element) return;
-    if (element.closest("#mgk-sheet-drawer, .mgk-drawer-panel")) return;
+    if (element.closest("#mgk-sheet-drawer, .mgk-drawer-panel, .mgk-mobile-settings, .settings-config, #client-settings")) return;
+    if (element.classList.contains("settings-config") || element.classList.contains("mgk-mobile-settings") || element.id === "client-settings") return;
 
     // Elevate dialogs/applications so they float above mobile sheet drawers (z-index 1000)
     const currentZ = parseInt(window.getComputedStyle(element).zIndex) || 100;

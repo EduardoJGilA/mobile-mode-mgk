@@ -21,15 +21,18 @@ import { RulerTouchHud } from './touch/ruler-touch-hud.js';
 import { TemplatePlacer } from './touch/template-placer.js';
 import { SheetOnly } from './standalone/sheet-only.js';
 import { CanvasFreeze } from './performance/canvas-freeze.js';
+import { PerformanceTuner } from './performance/performance-tuner.js';
 import { MemoryDiagnostics } from './performance/memory-diagnostics.js';
 import { ImageOptimizer } from './performance/image-optimizer.js';
 import { ImageCompressor } from './performance/image-compressor.js';
+import { SettingsInterceptor } from './ui/settings-interceptor.js';
 
 const api = {
   gestureHandler: null,
   active: false,
   ImageOptimizer,
   ImageCompressor,
+  PerformanceTuner,
   MemoryDiagnostics,
   SheetManager,
   AvatarCarousel,
@@ -42,6 +45,8 @@ console.log("Mobile Mode MGK | Loading module...");
 
 Hooks.once("init", () => {
   registerSettings();
+  PerformanceTuner.init();
+  SettingsInterceptor.init();
   const mod = game.modules.get(MODULE_ID);
   if (mod) mod.api = api;
 });

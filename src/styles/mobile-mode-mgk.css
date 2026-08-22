@@ -2331,3 +2331,315 @@ body.mgk-sheet-only #canvas { display: none !important; }
 .mgk-status.mgk-vsn-cond.broken.active { border-style: solid; }
 
 .mgk-chip.active { color: var(--mgk-brass); }
+
+/* ==========================================================================
+   Mobile Settings Config — Full-screen, Thumb-Friendly Panel
+   ========================================================================== */
+
+body.mobile-mode-mgk .app.window-app.settings-config,
+body.mobile-mode-mgk .settings-config,
+body.mobile-mode-mgk #client-settings {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  max-height: 100dvh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: var(--mgk-ink) !important;
+  color: var(--mgk-bone) !important;
+  overflow: hidden !important;
+  box-shadow: none !important;
+}
+
+body.mobile-mode-mgk .settings-config .window-header,
+body.mobile-mode-mgk #client-settings .window-header {
+  height: 52px !important;
+  min-height: 52px !important;
+  padding: 0 16px !important;
+  padding-top: var(--mgk-safe-top) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background: var(--mgk-slate-hi) !important;
+  border-bottom: 1px solid var(--mgk-edge) !important;
+  color: var(--mgk-bone) !important;
+  flex-shrink: 0 !important;
+}
+
+body.mobile-mode-mgk .settings-config .window-header .window-title,
+body.mobile-mode-mgk #client-settings .window-header .window-title {
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  color: var(--mgk-brass) !important;
+  letter-spacing: 0.02em !important;
+}
+
+body.mobile-mode-mgk .settings-config .window-header .header-button.close,
+body.mobile-mode-mgk #client-settings .window-header .header-button.close {
+  min-width: 44px !important;
+  min-height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.2rem !important;
+  color: var(--mgk-bone) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-radius: 50% !important;
+  margin: 0 !important;
+}
+
+/* Category navigation tabs */
+body.mobile-mode-mgk .settings-config nav.sheet-tabs,
+body.mobile-mode-mgk .settings-config nav.tabs,
+body.mobile-mode-mgk #client-settings nav.sheet-tabs,
+body.mobile-mode-mgk #client-settings nav.tabs {
+  display: flex !important;
+  flex-direction: row !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  gap: 8px !important;
+  padding: 10px 14px !important;
+  background: var(--mgk-slate) !important;
+  border-bottom: 1px solid var(--mgk-edge) !important;
+  flex-shrink: 0 !important;
+  scrollbar-width: none !important;
+}
+
+body.mobile-mode-mgk .settings-config nav.sheet-tabs::-webkit-scrollbar,
+body.mobile-mode-mgk #client-settings nav.sheet-tabs::-webkit-scrollbar {
+  display: none !important;
+}
+
+body.mobile-mode-mgk .settings-config nav.sheet-tabs .item,
+body.mobile-mode-mgk .settings-config nav.tabs .item,
+body.mobile-mode-mgk #client-settings nav.sheet-tabs .item,
+body.mobile-mode-mgk #client-settings nav.tabs .item {
+  min-height: 38px !important;
+  padding: 8px 16px !important;
+  border-radius: 19px !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid var(--mgk-edge-soft) !important;
+  color: var(--mgk-ash) !important;
+  white-space: nowrap !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+body.mobile-mode-mgk .settings-config nav.sheet-tabs .item.active,
+body.mobile-mode-mgk .settings-config nav.tabs .item.active,
+body.mobile-mode-mgk #client-settings nav.sheet-tabs .item.active,
+body.mobile-mode-mgk #client-settings nav.tabs .item.active {
+  background: var(--mgk-brass) !important;
+  color: var(--mgk-ink) !important;
+  border-color: var(--mgk-brass) !important;
+  font-weight: 700 !important;
+}
+
+/* Settings Form Content Area */
+body.mobile-mode-mgk .settings-config section.content,
+body.mobile-mode-mgk .settings-config .sheet-body,
+body.mobile-mode-mgk #client-settings section.content,
+body.mobile-mode-mgk #client-settings .sheet-body {
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding: 14px 14px calc(90px + var(--mgk-safe-bottom)) 14px !important;
+  background: var(--mgk-ink) !important;
+}
+
+body.mobile-mode-mgk .settings-config .form-group,
+body.mobile-mode-mgk #client-settings .form-group {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 8px !important;
+  margin-bottom: 14px !important;
+  padding: 14px !important;
+  background: var(--mgk-slate) !important;
+  border: 1px solid var(--mgk-edge-soft) !important;
+  border-radius: 8px !important;
+}
+
+body.mobile-mode-mgk .settings-config .form-group > label,
+body.mobile-mode-mgk #client-settings .form-group > label {
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  color: var(--mgk-bone) !important;
+  margin: 0 !important;
+  line-height: 1.3 !important;
+}
+
+body.mobile-mode-mgk .settings-config .form-group p.notes,
+body.mobile-mode-mgk .settings-config .form-group p.hint,
+body.mobile-mode-mgk #client-settings .form-group p.notes,
+body.mobile-mode-mgk #client-settings .form-group p.hint {
+  font-size: 0.82rem !important;
+  color: var(--mgk-ash) !important;
+  line-height: 1.35 !important;
+  margin: 0 !important;
+}
+
+body.mobile-mode-mgk .settings-config .form-group .form-fields,
+body.mobile-mode-mgk #client-settings .form-group .form-fields {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  width: 100% !important;
+}
+
+body.mobile-mode-mgk .settings-config input[type="text"],
+body.mobile-mode-mgk .settings-config input[type="number"],
+body.mobile-mode-mgk .settings-config select,
+body.mobile-mode-mgk #client-settings input[type="text"],
+body.mobile-mode-mgk #client-settings input[type="number"],
+body.mobile-mode-mgk #client-settings select {
+  min-height: 44px !important;
+  font-size: 16px !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  background: var(--mgk-ink) !important;
+  color: var(--mgk-bone) !important;
+  border: 1px solid var(--mgk-edge) !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Toggle Switches */
+body.mobile-mode-mgk .settings-config .form-group.mgk-switch-enhanced,
+body.mobile-mode-mgk #client-settings .form-group.mgk-switch-enhanced {
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+body.mobile-mode-mgk .settings-config .form-group.mgk-switch-enhanced .form-fields,
+body.mobile-mode-mgk #client-settings .form-group.mgk-switch-enhanced .form-fields {
+  width: auto !important;
+}
+
+body.mobile-mode-mgk .settings-config input[type="checkbox"],
+body.mobile-mode-mgk #client-settings input[type="checkbox"] {
+  width: 52px !important;
+  height: 30px !important;
+  min-width: 52px !important;
+  min-height: 30px !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background: var(--mgk-edge) !important;
+  border-radius: 15px !important;
+  position: relative !important;
+  cursor: pointer !important;
+  outline: none !important;
+  border: none !important;
+  transition: background 0.2s ease !important;
+  margin: 0 !important;
+}
+
+body.mobile-mode-mgk .settings-config input[type="checkbox"]::after,
+body.mobile-mode-mgk #client-settings input[type="checkbox"]::after {
+  content: '' !important;
+  position: absolute !important;
+  top: 3px !important;
+  left: 3px !important;
+  width: 24px !important;
+  height: 24px !important;
+  background: #ffffff !important;
+  border-radius: 50% !important;
+  transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+}
+
+body.mobile-mode-mgk .settings-config input[type="checkbox"]:checked,
+body.mobile-mode-mgk #client-settings input[type="checkbox"]:checked {
+  background: var(--mgk-brass) !important;
+}
+
+body.mobile-mode-mgk .settings-config input[type="checkbox"]:checked::after,
+body.mobile-mode-mgk #client-settings input[type="checkbox"]:checked::after {
+  transform: translateX(22px) !important;
+}
+
+/* Range Sliders */
+body.mobile-mode-mgk .settings-config input[type="range"],
+body.mobile-mode-mgk #client-settings input[type="range"] {
+  flex: 1 1 auto !important;
+  height: 38px !important;
+  cursor: pointer !important;
+  accent-color: var(--mgk-brass) !important;
+}
+
+.mgk-range-badge {
+  min-width: 42px !important;
+  height: 32px !important;
+  padding: 0 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--mgk-slate-hi) !important;
+  border: 1px solid var(--mgk-brass-dim) !important;
+  color: var(--mgk-brass) !important;
+  border-radius: 6px !important;
+  font-weight: 700 !important;
+  font-family: var(--mgk-font-data) !important;
+  font-size: 0.9rem !important;
+}
+
+/* Sticky Action Footer */
+body.mobile-mode-mgk .settings-config footer.sheet-footer,
+body.mobile-mode-mgk .settings-config footer,
+body.mobile-mode-mgk #client-settings footer.sheet-footer,
+body.mobile-mode-mgk #client-settings footer {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  padding: 12px 16px calc(12px + var(--mgk-safe-bottom)) 16px !important;
+  background: var(--mgk-slate-hi) !important;
+  border-top: 1px solid var(--mgk-edge) !important;
+  display: flex !important;
+  gap: 12px !important;
+  z-index: 1000 !important;
+  box-shadow: 0 -8px 20px rgba(0,0,0,0.5) !important;
+}
+
+body.mobile-mode-mgk .settings-config footer button,
+body.mobile-mode-mgk #client-settings footer button {
+  flex: 1 1 0 !important;
+  min-height: 48px !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  background: var(--mgk-brass) !important;
+  color: var(--mgk-ink) !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+}
+
+body.mobile-mode-mgk .settings-config footer button[type="button"],
+body.mobile-mode-mgk #client-settings footer button[type="button"] {
+  background: var(--mgk-slate) !important;
+  color: var(--mgk-bone) !important;
+  border: 1px solid var(--mgk-edge) !important;
+}
+
