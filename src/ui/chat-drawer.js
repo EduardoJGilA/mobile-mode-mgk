@@ -66,9 +66,6 @@ export class ChatDrawer {
     panel.querySelector("#mgk-chat-content").addEventListener("click", (ev) => {
       const button = ev.target.closest("button[data-action], .card-buttons button, a.inline-roll, .roll-button");
       if (!button) return;
-      setTimeout(() => {
-        if (this.isOpen) this.close();
-      }, 80);
       const messageEl = ev.target.closest("[data-message-id]");
       const message = game.messages.get(messageEl?.dataset.messageId);
       if (message) Hooks.call("mgkChatCardAction", message, button, ev);

@@ -1,6 +1,4 @@
 import { ChatStack } from '../ui/chat-stack.js';
-import { ChatDrawer } from '../ui/chat-drawer.js';
-import { SheetManager } from '../sheets/sheet-manager.js';
 
 /**
  * Fits Foundry application windows (journals, handouts, item sheets, settings, dialogs)
@@ -22,11 +20,33 @@ export class WindowScaler {
     return html?.[0] ?? null;
   }
 
+  static isFloatingWindow(app, element) {
+    if (!element) return false;
+
+    // Ignore mobile-mode's own drawers, overlays, panels, and settings
+    if (element.closest("#mgk-sheet-drawer, .mgk-drawer-panel, .mgk-mobile-settings, .settings-config, #client-settings, #mgk-quick-controls, #mgk-avatar-carousel")) return false;
+    if (element.classList.contains("settings-config") || element.classList.contains("mgk-mobile-settings") || element.id === "client-settings") return false;
+
+    // Ignore Foundry's persistent HUD, sidebars, bars and fixed navigation chrome
+    if (element.closest("#sidebar, #ui-left, #ui-right, #ui-top, #ui-bottom, #hotbar, #controls, #navigation, #players, #notifications, #pause, #chat, #combat, #scene-navigation, #scene-controls")) return false;
+
+    // Ignore elements hidden by mobile CSS
+    if (element.id && ["players", "hotbar", "navigation", "scene-navigation", "logo", "sidebar", "ui-right", "controls", "scene-controls"].includes(element.id)) return false;
+
+    // Must be a floating window application or dialog
+    const isWindow = element.classList.contains("window-app")
+      || element.classList.contains("application--window")
+      || element.classList.contains("dialog")
+      || element.tagName === "DIALOG"
+      || !!element.querySelector(":scope > .window-header, :scope > header.window-header")
+      || !!app?.options?.window?.frame;
+
+    return isWindow;
+  }
+
   static scaleWindow(app, html) {
     const element = this.resolveElement(app, html);
-    if (!element) return;
-    if (element.closest("#mgk-sheet-drawer, .mgk-drawer-panel, .mgk-mobile-settings, .settings-config, #client-settings")) return;
-    if (element.classList.contains("settings-config") || element.classList.contains("mgk-mobile-settings") || element.id === "client-settings") return;
+    if (!this.isFloatingWindow(app, element)) return;
 
     // Elevate dialogs/applications so they float above mobile sheet drawers (z-index 1000)
     const currentZ = parseInt(window.getComputedStyle(element).zIndex) || 100;
@@ -34,15 +54,9 @@ export class WindowScaler {
       element.style.zIndex = "1500";
     }
 
-    // Auto-hide floating chat card, chat drawer, and sheet drawer when a roll dialog or window pops up
+    // Hide transient floating chat preview so it doesn't obstruct dialogs
     if (ChatStack.visible) {
       ChatStack.hide();
-    }
-    if (ChatDrawer.isOpen) {
-      ChatDrawer.close();
-    }
-    if (SheetManager.isOpen) {
-      SheetManager.close();
     }
 
     const screenWidth = window.innerWidth;

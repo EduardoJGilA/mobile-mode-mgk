@@ -248,7 +248,6 @@ export class SheetManager {
       case "use-item":
         ev.stopPropagation();
         if (!item) return;
-        this.minimize();
         if (typeof this.adapter?.useItem === "function") {
           await this.adapter.useItem(item, actor, ev);
         } else if (typeof item.use === "function") {
@@ -273,27 +272,22 @@ export class SheetManager {
 
       case "open-item":
         ev.stopPropagation();
-        this.minimize();
         item?.sheet?.render(true);
         break;
 
       case "roll-ability":
-        this.minimize();
         await this.adapter.rollAbility(actor, ability, ev);
         break;
 
       case "roll-save":
-        this.minimize();
         await this.adapter.rollSave(actor, ability, ev);
         break;
 
       case "roll-skill":
-        this.minimize();
         await this.adapter.rollSkill(actor, skill, ev);
         break;
 
       case "roll-initiative":
-        this.minimize();
         if (typeof this.adapter?.rollInitiative === "function") {
           await this.adapter.rollInitiative(actor, ev);
         } else if (typeof actor.rollInitiativeDialog === "function") {
@@ -304,7 +298,6 @@ export class SheetManager {
         break;
 
       case "roll-hit-die":
-        this.minimize();
         if (typeof this.adapter?.rollHitDie === "function") {
           await this.adapter.rollHitDie(actor, ev);
         } else if (typeof actor.rollHitDie === "function") {
@@ -315,7 +308,6 @@ export class SheetManager {
         break;
 
       case "roll-perception":
-        this.minimize();
         if (typeof actor.perception?.roll === "function") {
           await actor.perception.roll({ event: ev });
         } else if (typeof this.adapter?.rollPerception === "function") {
@@ -330,12 +322,10 @@ export class SheetManager {
         break;
 
       case "rest-short":
-        this.minimize();
         await this.adapter.rest(actor, "short");
         break;
 
       case "rest-long":
-        this.minimize();
         await this.adapter.rest(actor, "long");
         break;
 
@@ -387,19 +377,21 @@ export class SheetManager {
   static attachSwipe(panel) {
     const body = panel.querySelector("#mgk-sheet-body");
 
-    // Pull down to close, from the header area only.
-    const header = panel.querySelector(".mgk-sheet-header");
+    // Pull down to close, from the grab handle only.
     const grab = panel.querySelector(".mgk-drawer-grab");
-    let headerStartY = 0;
+    let grabStartY = 0;
+    let grabStartX = 0;
 
-    for (const region of [header, grab]) {
-      region.addEventListener("touchstart", (ev) => {
-        headerStartY = ev.touches[0]?.clientY ?? 0;
+    if (grab) {
+      grab.addEventListener("touchstart", (ev) => {
+        grabStartY = ev.touches[0]?.clientY ?? 0;
+        grabStartX = ev.touches[0]?.clientX ?? 0;
       }, { passive: true });
 
-      region.addEventListener("touchend", (ev) => {
-        const dy = (ev.changedTouches[0]?.clientY ?? 0) - headerStartY;
-        if (dy > SWIPE_CLOSE_PX) this.close();
+      grab.addEventListener("touchend", (ev) => {
+        const dy = (ev.changedTouches[0]?.clientY ?? 0) - grabStartY;
+        const dx = (ev.changedTouches[0]?.clientX ?? 0) - grabStartX;
+        if (dy > SWIPE_CLOSE_PX && Math.abs(dy) > Math.abs(dx)) this.close();
       }, { passive: true });
     }
 
