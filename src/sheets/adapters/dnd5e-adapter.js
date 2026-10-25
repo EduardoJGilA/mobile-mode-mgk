@@ -200,9 +200,11 @@ export class DnD5eAdapter {
       return `
         <div class="mgk-ability-card">
           <div class="mgk-ability-label">${esc(label)}</div>
-          <button type="button" class="mgk-ability-score" data-action="roll-ability" data-ability="${esc(key)}">
+          ${data.editing
+            ? `<input type="number" class="mgk-ability-score mgk-num-input" data-binding="system.abilities.${esc(key)}.value" value="${esc(this.num(ab.value, 10))}" inputmode="numeric">`
+            : `<button type="button" class="mgk-ability-score" data-action="roll-ability" data-ability="${esc(key)}">
             ${esc(this.num(ab.value, 10))}
-          </button>
+          </button>`}
           <div class="mgk-ability-mod">${esc(signed(this.num(ab.mod)))}</div>
           <button type="button" class="mgk-save-mod" data-action="roll-save" data-ability="${esc(key)}">
             ${esc(t("Sheets.Save", "SAVE"))} ${esc(signed(this.num(ab.save)))}
@@ -316,7 +318,9 @@ export class DnD5eAdapter {
     const currency = `
       <div class="mgk-currency">
         ${["pp", "gp", "ep", "sp", "cp"].map(c => `
-          <div><small>${esc(c.toUpperCase())}</small><div>${esc(this.num(data.currency[c]))}</div></div>
+          <div><small>${esc(c.toUpperCase())}</small>${data.editing
+            ? `<input type="number" class="mgk-num-input" data-binding="system.currency.${c}" value="${esc(this.num(data.currency[c]))}" inputmode="numeric" min="0">`
+            : `<div>${esc(this.num(data.currency[c]))}</div>`}</div>
         `).join("")}
       </div>
       ${data.encumbrance ? `

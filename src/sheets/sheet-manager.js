@@ -21,6 +21,8 @@ export class SheetManager {
   static panel = null;
   static adapter = null;
   static pendingRender = false;
+  /** Locked by default, like the native dnd5e play/edit toggle. */
+  static editing = false;
 
   static init() {
     Hooks.on("mobileModeOpenSheet", (actor) => this.openSheet(actor));
@@ -101,6 +103,9 @@ export class SheetManager {
           </div>
         </div>
         <div class="mgk-header-right">
+          <button type="button" id="mgk-edit-sheet" class="mgk-icon-btn" aria-label="${esc(t("Sheets.ToggleEdit", "Toggle edit mode"))}">
+            <i class="fas fa-lock"></i>
+          </button>
           <button type="button" id="mgk-sheet-hp" class="mgk-header-hp"></button>
           <button type="button" id="mgk-minimize-sheet" class="mgk-icon-btn" aria-label="${esc(t("Sheets.Minimize", "Minimize"))}">
             <i class="fas fa-minus"></i>
@@ -110,6 +115,7 @@ export class SheetManager {
           </button>
         </div>
       </div>
+      <div id="mgk-edit-bar" class="mgk-edit-bar" hidden></div>
       <nav class="mgk-sheet-nav" id="mgk-sheet-nav"></nav>
       <div id="mgk-sheet-body" class="mgk-sheet-body"></div>
     `;
@@ -118,6 +124,12 @@ export class SheetManager {
 
     panel.querySelector("#mgk-close-sheet").addEventListener("click", () => this.close());
     panel.querySelector("#mgk-minimize-sheet").addEventListener("click", () => this.minimize());
+    panel.querySelector("#mgk-edit-sheet").addEventListener("click", () => {
+      this.saveBinding(document.activeElement);
+      document.activeElement?.blur?.();
+      this.editing = !this.editing;
+      this.renderContent();
+    });
     panel.querySelector("#mgk-sheet-hp").addEventListener("click", (ev) => {
       ev.stopPropagation();
       if (!this.currentActor || this.adapter.hasHp === false) return;
@@ -130,29 +142,30 @@ export class SheetManager {
       this.selectTab(btn.dataset.tab);
     });
 
-    // One delegated listener for every action any adapter emits.
-    panel.querySelector("#mgk-sheet-body").addEventListener("click", (ev) => {
-      if (ev.target.closest(".mgk-slot-tracker")) {
-        ev.preventDefault();
-        ev.stopPropagation();
-      }
-      this.onAction(ev);
-    });
+    for (const area of panel.querySelectorAll("#mgk-sheet-body, #mgk-edit-bar")) {
+      // One delegated listener for every action any adapter emits.
+      area.addEventListener("click", (ev) => {
+        if (ev.target.closest(".mgk-slot-tracker")) {
+          ev.preventDefault();
+          ev.stopPropagation();
+        }
+        this.onAction(ev);
+      });
 
-    // Handle generic field bindings (e.g. bio/notes textareas).
-    // Inputs fire `change`; contenteditable boxes only settle on blur.
-    const body = panel.querySelector("#mgk-sheet-body");
-    body.addEventListener("change", (ev) => this.saveBinding(ev.target));
-    body.addEventListener("focusout", (ev) => {
-      this.saveBinding(ev.target);
-      // `relatedTarget` is unreliable on mobile keyboards, so let focus land
-      // first and only redraw once the user has left every editable field.
-      setTimeout(() => {
-        if (!this.pendingRender || this.isEditing()) return;
-        this.pendingRender = false;
-        this.renderContent();
-      }, 0);
-    });
+      // Handle generic field bindings (e.g. bio/notes textareas).
+      // Inputs fire `change`; contenteditable boxes only settle on blur.
+      area.addEventListener("change", (ev) => this.saveBinding(ev.target));
+      area.addEventListener("focusout", (ev) => {
+        this.saveBinding(ev.target);
+        // `relatedTarget` is unreliable on mobile keyboards, so let focus land
+        // first and only redraw once the user has left every editable field.
+        setTimeout(() => {
+          if (!this.pendingRender || this.isEditing()) return;
+          this.pendingRender = false;
+          this.renderContent();
+        }, 0);
+      });
+    }
 
     this.attachSwipe(panel);
     return panel;
@@ -185,12 +198,12 @@ export class SheetManager {
 
   /** True while the caret sits in one of the tab's bound fields. */
   static isEditing() {
-    return !!document.activeElement?.closest?.("#mgk-sheet-body [data-binding]");
+    return !!document.activeElement?.closest?.("#mgk-sheet-drawer [data-binding]");
   }
 
   /** Persist a bound field. Contenteditable boxes carry HTML, inputs a value. */
   static async saveBinding(target) {
-    const input = target?.closest?.("#mgk-sheet-body [data-binding]");
+    const input = target?.closest?.("#mgk-sheet-drawer [data-binding]");
     if (!input || !this.currentActor) return;
 
     const path = input.dataset.binding;
@@ -212,6 +225,8 @@ export class SheetManager {
     }
 
     const data = this.adapter.getCharacterData(this.currentActor);
+    data.editing = this.editing;
+    this.renderEditBar();
 
     this.panel.querySelector("#mgk-sheet-name").textContent = data.name;
     this.panel.querySelector("#mgk-sheet-sub").textContent = data.subtitle ?? "";
@@ -229,6 +244,33 @@ export class SheetManager {
     const scroll = body.scrollTop;
     body.innerHTML = this.adapter.renderTab(this.currentTab, data);
     body.scrollTop = scroll;
+  }
+
+  static get plutonium() {
+    return game.modules.get("plutonium")?.active ? game.modules.get("plutonium").api : null;
+  }
+
+  static renderEditBar() {
+    this.panel.classList.toggle("mgk-editing", this.editing);
+    const icon = this.panel.querySelector("#mgk-edit-sheet i");
+    icon.className = `fas ${this.editing ? "fa-lock-open" : "fa-lock"}`;
+    const bar = this.panel.querySelector("#mgk-edit-bar");
+    bar.hidden = !this.editing;
+    if (!this.editing) return;
+    bar.innerHTML = `
+      <input type="text" class="mgk-bio-input" data-binding="name" value="${esc(this.currentActor.name)}"
+             aria-label="${esc(t("Sheets.Name", "Name"))}">
+      <button type="button" class="mgk-edit-btn" data-action="edit-img" aria-label="${esc(t("Sheets.ChangeImage", "Change portrait"))}">
+        <i class="fas fa-image"></i>
+      </button>
+      ${this.plutonium ? `
+        <button type="button" class="mgk-edit-btn" data-action="plutonium-import">
+          <i class="fas fa-file-import"></i> Plutonium
+        </button>` : ""}
+      <button type="button" class="mgk-edit-btn" data-action="open-native" aria-label="${esc(t("Sheets.OpenNative", "Open full sheet"))}">
+        <i class="fas fa-up-right-from-square"></i>
+      </button>
+    `;
   }
 
   /* -------------------------------------------- */
@@ -273,6 +315,26 @@ export class SheetManager {
       case "open-item":
         ev.stopPropagation();
         item?.sheet?.render(true);
+        break;
+
+      case "delete-item":
+        ev.stopPropagation();
+        await item?.deleteDialog();
+        break;
+
+      case "edit-img": {
+        const FilePicker = foundry.applications.apps.FilePicker.implementation;
+        new FilePicker({ type: "image", current: actor.img, callback: (img) => actor.update({ img }) }).render(true);
+        break;
+      }
+
+      case "plutonium-import":
+        // Importer windows sit above the drawer; imported items re-render it via createItem.
+        try {
+          await this.plutonium?.importer.pOpen({ actor });
+        } catch (err) {
+          ui.notifications?.error(err.message);
+        }
         break;
 
       case "roll-ability":

@@ -6,17 +6,21 @@
  * roll dialogs, and HUD applications to function normally.
  */
 export class SheetInterceptor {
-  /** Set while deliberately opening the real sheet, e.g. "Open full sheet". */
-  static bypass = false;
+  /** Sheets deliberately opened via "Open full sheet"; left alone until closed. */
+  static native = new WeakSet();
 
   static init() {
     for (const hook of ["renderActorSheet", "renderActorSheetV2", "renderApplicationV2", "renderApplication"]) {
       Hooks.on(hook, (app) => this.onRender(app));
     }
+    // Every edit re-renders the sheet, so the exemption must outlive the first render.
+    for (const hook of ["closeApplicationV2", "closeApplication"]) {
+      Hooks.on(hook, (app) => this.native.delete(app));
+    }
   }
 
   static onRender(app) {
-    if (this.bypass || !app) return;
+    if (!app || this.native.has(app)) return;
 
     // Must strictly be an ActorSheet instance, not an ItemSheet, RollDialog, or HUD
     const name = app?.constructor?.name?.toLowerCase() ?? "";
@@ -31,6 +35,8 @@ export class SheetInterceptor {
 
     const actor = app?.actor ?? (app?.document?.documentName === "Actor" ? app.document : null);
     if (!actor || actor.documentName !== "Actor") return;
+    // Only the actor's own sheet; importer/builder windows (e.g. Plutonium) pass through.
+    if (app !== actor.sheet) return;
     if (typeof actor.isOwner === "boolean" && !actor.isOwner) return;
 
     Promise.resolve().then(() => {
@@ -39,14 +45,11 @@ export class SheetInterceptor {
     });
   }
 
-  /** Open the genuine Foundry sheet, bypassing this interceptor once. */
+  /** Open the genuine Foundry sheet and keep it open while the user edits. */
   static async openNative(actor) {
-    if (!actor) return;
-    this.bypass = true;
-    try {
-      await actor.sheet?.render(true);
-    } finally {
-      setTimeout(() => { this.bypass = false; }, 1000);
-    }
+    const sheet = actor?.sheet;
+    if (!sheet) return;
+    this.native.add(sheet);
+    await sheet.render(true);
   }
 }

@@ -45,6 +45,9 @@ export function itemRow({ id, img, name, subtitle = "", chips = [], action = "us
       <button type="button" class="mgk-row-action" data-action="${esc(action)}" data-item-id="${esc(id)}">
         ${actionLabel ? esc(actionLabel) : '<i class="fas fa-dice-d20"></i>'}
       </button>
+      <button type="button" class="mgk-row-action mgk-row-delete" data-action="delete-item" data-item-id="${esc(id)}" aria-label="Delete">
+        <i class="fas fa-trash"></i>
+      </button>
       ${expandable ? `<div class="mgk-row-detail"></div>` : ""}
     </div>
   `;

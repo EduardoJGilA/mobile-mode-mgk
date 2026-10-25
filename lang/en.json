@@ -152,7 +152,10 @@
       "Shove": "Shove",
       "Gear": "Gear",
       "UseItem": "Cast / Use",
-      "EditItem": "Edit item"
+      "EditItem": "Edit item",
+      "ToggleEdit": "Toggle edit mode",
+      "Name": "Name",
+      "ChangeImage": "Change portrait"
     },
     "Optimizer": {
       "Title": "Mobile Image Optimizer",

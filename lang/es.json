@@ -152,7 +152,10 @@
       "Shove": "Empujar",
       "Gear": "Equipo",
       "UseItem": "Lanzar / Usar",
-      "EditItem": "Editar ficha"
+      "EditItem": "Editar ficha",
+      "ToggleEdit": "Activar/desactivar edición",
+      "Name": "Nombre",
+      "ChangeImage": "Cambiar retrato"
     },
     "Optimizer": {
       "Title": "Optimizador de imágenes móvil",

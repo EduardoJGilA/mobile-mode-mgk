@@ -2758,3 +2758,49 @@ body.mobile-mode-mgk #client-settings footer button[type="button"] {
 }
 
 
+
+/* --------------------------------------------------------------------------
+   Edit mode — header lock toggles it; play mode stays tap-to-roll.
+   -------------------------------------------------------------------------- */
+
+.mgk-edit-bar {
+  order: 1;
+  display: flex;
+  gap: 6px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--mgk-edge);
+}
+
+.mgk-edit-bar[hidden] { display: none; }
+.mgk-edit-bar .mgk-bio-input { flex: 1; min-width: 0; }
+
+.mgk-edit-btn {
+  background: transparent;
+  border: 1px solid var(--mgk-brass-dim);
+  color: var(--mgk-brass);
+  min-width: 44px;
+  min-height: 36px;
+  white-space: nowrap;
+  clip-path: var(--mgk-chamfer-sm);
+  cursor: pointer;
+}
+
+.mgk-editing #mgk-edit-sheet { color: var(--mgk-brass); }
+
+.mgk-row-delete,
+.mgk-editing .mgk-row-action:not(.mgk-row-delete) { display: none; }
+.mgk-editing .mgk-row-delete { display: block; border-color: var(--mgk-oxide); color: var(--mgk-oxide); }
+
+.mgk-num-input {
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  background: var(--mgk-ink);
+  border: 1px solid var(--mgk-brass-dim);
+  color: var(--mgk-bone);
+  font-family: var(--mgk-font-data);
+  font-weight: 700;
+  -moz-appearance: textfield;
+}
+
+.mgk-num-input::-webkit-inner-spin-button { -webkit-appearance: none; }

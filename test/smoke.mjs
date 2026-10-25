@@ -165,6 +165,15 @@ for (const tab of DnD5eAdapter.tabs) {
   });
 }
 
+await check("edit mode swaps rolls for bound inputs", () => {
+  const edit = { ...data, editing: true };
+  const abil = DnD5eAdapter.renderTab("Abilities", edit);
+  assert.ok(abil.includes('data-binding="system.abilities.str.value"'));
+  assert.ok(!abil.includes('data-action="roll-ability"'));
+  assert.ok(DnD5eAdapter.renderTab("Inventory", edit).includes('data-binding="system.currency.gp"'));
+  assert.ok(!DnD5eAdapter.renderTab("Abilities", data).includes("data-binding"));
+});
+
 await check("hostile item name is escaped everywhere it appears", () => {
   // Every character of NASTY must survive only in escaped form. Checking for a
   // specific payload string would pass under partial escaping, so assert that
@@ -385,6 +394,35 @@ await check("measures live GPU textures when the scene is active", () => {
   };
   const mb = MemoryDiagnostics.estimateSceneMemory({ id: "s1" });
   assert.strictEqual(mb, Math.round(1024 * 1024 * 4 / (1024 * 1024)));
+});
+
+await check("native sheet survives re-renders until closed; other actor apps pass through", async () => {
+  const { SheetInterceptor } = await import("../src/sheets/sheet-interceptor.js");
+  const hooks = {};
+  let opened = 0;
+  globalThis.Hooks = { on: (h, fn) => (hooks[h] ??= []).push(fn), callAll: () => opened++ };
+  SheetInterceptor.init();
+  const actor = { documentName: "Actor", isOwner: true };
+  let closed = 0;
+  const sheet = { constructor: { name: "CharacterActorSheet" }, actor, render: async () => {}, close: () => closed++ };
+  actor.sheet = sheet;
+  const tick = () => new Promise(r => setTimeout(r));
+
+  await SheetInterceptor.openNative(actor);
+  hooks.renderApplicationV2.forEach(fn => fn(sheet));
+  await tick();
+  assert.strictEqual(closed, 0, "edited native sheet was closed");
+
+  hooks.closeApplicationV2.forEach(fn => fn(sheet));
+  hooks.renderApplicationV2.forEach(fn => fn(sheet));
+  await tick();
+  assert.strictEqual(closed, 1);
+  assert.strictEqual(opened, 1);
+
+  const builder = { constructor: { name: "ImportActorSheet" }, actor, close: () => closed++ };
+  hooks.renderApplicationV2.forEach(fn => fn(builder));
+  await tick();
+  assert.strictEqual(closed, 1, "foreign actor app was hijacked");
 });
 
 /* -------------------------------------------- */
