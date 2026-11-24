@@ -44,6 +44,9 @@ export class SettingsInterceptor {
     // Add mobile close header button if not present
     this.ensureMobileHeader(app, el);
 
+    // The native sidebar (where "Manage Modules" lives) is hidden on phones.
+    this.addManageModules(el);
+
     // Transform checkboxes into touch switches
     this.enhanceCheckboxes(el);
 
@@ -62,6 +65,19 @@ export class SettingsInterceptor {
     if (header) {
       header.classList.add("mgk-settings-header");
     }
+  }
+
+  static addManageModules(el) {
+    if (!game.user.isGM || el.id !== "settings-config" || el.querySelector(".mgk-manage-modules")) return;
+    const aside = el.querySelector(".window-content > aside");
+    if (!aside) return;
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "mgk-manage-modules";
+    btn.innerHTML = `<i class="fa-solid fa-puzzle-piece"></i> ${game.i18n.localize("SIDEBAR.SETTINGS.ACTIONS.ManageModules")}`;
+    btn.addEventListener("click", () => new foundry.applications.sidebar.apps.ModuleManagement().render({ force: true }));
+    aside.prepend(btn);
   }
 
   static enhanceCheckboxes(el) {

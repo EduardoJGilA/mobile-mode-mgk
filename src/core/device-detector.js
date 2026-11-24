@@ -4,9 +4,14 @@ import { MODULE_ID } from './utils.js';
  * Device Detector Utility for Mobile Mode MGK
  */
 export class DeviceDetector {
-  /** True for real touch hardware. A narrow desktop window is not enough. */
+  /**
+   * True when touch is the PRIMARY input. Touchscreen laptops also report
+   * touch points, but their primary pointer is a fine one (mouse/trackpad).
+   */
   static isTouchDevice() {
-    return ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    const touch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    if (!touch) return false;
+    return window.matchMedia('(pointer: coarse)').matches || this.isIOS();
   }
 
   /** iPadOS 13+ reports itself as a Mac; the touch point count gives it away. */

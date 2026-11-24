@@ -31,6 +31,8 @@
       "canvasFreezeDelayHint": "How long the canvas must be idle before rendering stops.",
       "vramLimitWarning": "Texture Memory Warning Threshold (MB)",
       "vramLimitWarningHint": "Warn when estimated texture VRAM exceeds this amount (400MB suits iOS).",
+      "maxTextureSize": "Max texture size (px, 0 = auto)",
+      "maxTextureSizeHint": "Scene images larger than this are shrunk on this device so big maps stop rendering black. 0 uses the GPU limit, capped at 4096. Grid, walls and tokens keep their size.",
       "imageOptimizerThreshold": "Image Resolution Threshold (px)",
       "imageOptimizerThresholdHint": "Scene images larger than this are flagged by the image optimizer."
     },

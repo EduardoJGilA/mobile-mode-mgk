@@ -31,6 +31,8 @@
       "canvasFreezeDelayHint": "Tiempo de inactividad antes de detener el renderizado.",
       "vramLimitWarning": "Umbral de aviso de memoria de texturas (MB)",
       "vramLimitWarningHint": "Avisa cuando la VRAM estimada supera esta cantidad (400MB es adecuado para iOS).",
+      "maxTextureSize": "Tamaño máximo de textura (px, 0 = auto)",
+      "maxTextureSizeHint": "Las imágenes de escena mayores se reducen en este dispositivo para que los mapas grandes no salgan en negro. 0 usa el límite de la GPU, con tope de 4096. La cuadrícula, los muros y las fichas no cambian de tamaño.",
       "imageOptimizerThreshold": "Umbral de resolución de imagen (px)",
       "imageOptimizerThresholdHint": "El optimizador marca las imágenes de escena mayores que este valor."
     },

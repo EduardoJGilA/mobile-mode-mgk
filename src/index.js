@@ -26,6 +26,7 @@ import { MemoryDiagnostics } from './performance/memory-diagnostics.js';
 import { ImageOptimizer } from './performance/image-optimizer.js';
 import { ImageCompressor } from './performance/image-compressor.js';
 import { SettingsInterceptor } from './ui/settings-interceptor.js';
+import { TextureLimiter } from './performance/texture-limiter.js';
 
 const api = {
   gestureHandler: null,
@@ -33,6 +34,7 @@ const api = {
   ImageOptimizer,
   ImageCompressor,
   PerformanceTuner,
+  TextureLimiter,
   MemoryDiagnostics,
   SheetManager,
   AvatarCarousel,
@@ -46,6 +48,7 @@ console.log("Mobile Mode MGK | Loading module...");
 Hooks.once("init", () => {
   registerSettings();
   PerformanceTuner.init();
+  TextureLimiter.init();
   SettingsInterceptor.init();
   const mod = game.modules.get(MODULE_ID);
   if (mod) mod.api = api;

@@ -109,6 +109,13 @@ export function registerSettings() {
     default: 400
   });
 
+  reg("maxTextureSize", {
+    type: Number,
+    default: 0,
+    range: { min: 0, max: 16384, step: 1024 },
+    onChange: () => window.location.reload()
+  });
+
   reg("imageOptimizerThreshold", {
     scope: "world",
     type: Number,
